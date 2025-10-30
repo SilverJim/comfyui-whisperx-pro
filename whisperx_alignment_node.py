@@ -281,6 +281,8 @@ def load_model_from_modelscope(language_code: str, device: str) -> Tuple[Any, An
     """
     Load alignment model from ModelScope (魔塔社区).
 
+    Uses ModelScope's HuggingFace mirror endpoint for faster downloads in China.
+
     Args:
         language_code: Language code for the alignment model
         device: Device to load model on
@@ -288,51 +290,46 @@ def load_model_from_modelscope(language_code: str, device: str) -> Tuple[Any, An
     Returns:
         Tuple of (model, metadata)
     """
-    try:
-        from modelscope import snapshot_download
-    except ImportError:
-        raise ImportError(
-            "ModelScope is not installed. Please install it using:\n"
-            "pip install modelscope"
-        )
-
     import whisperx
 
-    # Map language codes to ModelScope model IDs
-    # These are the WhisperX alignment models hosted on ModelScope
-    modelscope_models = {
-        "en": "WAV2VEC2_ASR_BASE_960H",  # English
-        "zh": "speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch",  # Chinese
-        "ja": "speech_UniASR_asr_2pass-ja-16k-common-vocab93-tensorflow1-offline",  # Japanese
-        # Add more language mappings as needed
-    }
-
-    # For languages not in ModelScope, fall back to HuggingFace
-    if language_code not in modelscope_models:
-        print(f"Language '{language_code}' not available on ModelScope, using HuggingFace...")
-        return whisperx.load_align_model(language_code=language_code, device=device)
-
-    model_id = modelscope_models[language_code]
+    # Save original HF endpoint
+    original_endpoint = os.environ.get('HF_ENDPOINT', None)
 
     try:
-        # Download model from ModelScope
-        print(f"Downloading alignment model from ModelScope: {model_id}")
-        model_dir = snapshot_download(model_id)
-        print(f"Model downloaded to: {model_dir}")
+        # Set ModelScope mirror as HuggingFace endpoint
+        # This makes all HuggingFace model downloads go through ModelScope mirror
+        os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 
-        # Load the model using WhisperX
-        # We still use WhisperX's load function but with the local path
+        print(f"Loading alignment model from ModelScope mirror (https://hf-mirror.com)...")
+        print(f"Language: {language_code}, Device: {device}")
+
+        # Now load model - it will download from ModelScope mirror
         model, metadata = whisperx.load_align_model(
             language_code=language_code,
             device=device
         )
 
+        print(f"Successfully loaded alignment model from ModelScope mirror")
         return model, metadata
 
     except Exception as e:
-        print(f"Failed to load from ModelScope: {e}")
+        print(f"Failed to load from ModelScope mirror: {e}")
         print("Falling back to HuggingFace...")
+        # Restore original endpoint
+        if original_endpoint is not None:
+            os.environ['HF_ENDPOINT'] = original_endpoint
+        elif 'HF_ENDPOINT' in os.environ:
+            del os.environ['HF_ENDPOINT']
+
+        # Try loading from HuggingFace directly
         return whisperx.load_align_model(language_code=language_code, device=device)
+
+    finally:
+        # Restore original HF endpoint after loading
+        if original_endpoint is not None:
+            os.environ['HF_ENDPOINT'] = original_endpoint
+        elif 'HF_ENDPOINT' in os.environ:
+            del os.environ['HF_ENDPOINT']
 
 
 class WhisperXAlignmentNode:
