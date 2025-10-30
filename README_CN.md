@@ -6,8 +6,9 @@ ComfyUI 专业自定义节点，使用 [WhisperX](https://github.com/m-bain/whis
 
 ## 功能特性
 
-- **WhisperX 对齐节点**：精确的词级时间戳对齐
+- **WhisperX 对齐节点**：精确的词级和句子级时间戳对齐
 - **多语言界面**：节点界面根据 ComfyUI 的语言设置自动在中英文之间切换
+- **多级输出结构**：提供段落级、句子级（可配置约30字）和词级时间戳
 - 支持纯文本和 JSON 输入
 - 自动文本分段，可自定义句子拆分
 - 支持多种语言（中文、英语、法语、德语、西班牙语、意大利语、葡萄牙语、荷兰语、日语）
@@ -48,13 +49,15 @@ pip install git+https://github.com/m-bain/whisperx.git
 - `language`（下拉选项）：对齐模型的语言代码
 - `auto_segment`（布尔值）：自动将文本分段为较小的块（默认：True）
 - `max_chars_per_segment`（整数）：启用 auto_segment 时每段的最大字符数（默认：200，范围：50-1000）
+- `max_chars_per_sentence`（整数）：句子级输出的每句最大字符数（默认：30，范围：10-200）
 - `return_char_alignments`（布尔值）：返回字符级对齐（默认：False）
 - `model_name`（字符串，可选）：指定要使用的模型名称（默认："auto" - 根据语言自动选择）
 - `device`（下拉选项）：使用的设备（auto、cuda、cpu）
 
 **输出结果：**
-- `aligned_segments`（字符串）：带有精确时间戳的片段
+- `aligned_segments`（字符串）：带有精确时间戳的片段（基于 max_chars_per_segment 的较大块）
 - `word_segments`（字符串）：带有时间戳的单个词
+- `sentence_segments`（字符串）：句子级片段，带有时间戳（每句约 max_chars_per_sentence 字符）
 - `alignment_info`（字符串）：对齐统计信息和元数据
 
 **纯文本输入示例：**
@@ -87,6 +90,28 @@ Hello world. How are you today? I'm doing great!
     "start": 1.05,
     "end": 1.67,
     "score": 0.97
+  }
+]
+```
+
+**句子级片段输出示例：**
+```json
+[
+  {
+    "text": "Hello world. How are you today?",
+    "start": 0.52,
+    "end": 3.45,
+    "words": [
+      {"word": "Hello", "start": 0.52, "end": 0.89, "score": 0.95},
+      {"word": "world", "start": 1.05, "end": 1.67, "score": 0.97},
+      ...
+    ]
+  },
+  {
+    "text": "I'm doing great!",
+    "start": 3.45,
+    "end": 5.20,
+    "words": [...]
   }
 ]
 ```

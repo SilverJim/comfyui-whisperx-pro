@@ -149,6 +149,134 @@ def segment_text(text: str, max_chars: int = 200, language: str = "en") -> List[
     return [seg.strip() for seg in final_segments if seg.strip()]
 
 
+def group_words_into_sentences(
+    aligned_segments: List[Dict[str, Any]],
+    max_chars: int = 30,
+    language: str = "en"
+) -> List[Dict[str, Any]]:
+    """
+    Group aligned words into sentence-level segments with approximately max_chars per sentence.
+
+    Args:
+        aligned_segments: List of aligned segment objects from WhisperX
+        max_chars: Maximum characters per sentence (default 30)
+        language: Language code for language-specific punctuation detection
+
+    Returns:
+        List of sentence-level segments, each containing:
+        - text: sentence text
+        - start: start time of first word
+        - end: end time of last word
+        - words: list of word objects in this sentence
+    """
+    # Extract all words from all segments
+    all_words = []
+    for segment in aligned_segments:
+        if "words" in segment:
+            all_words.extend(segment["words"])
+
+    if not all_words:
+        return []
+
+    # Define sentence ending punctuation for different languages
+    if language in ["zh", "ja", "ko"]:
+        # CJK languages - sentence endings
+        sentence_endings = {'。', '！', '？', '!', '?', '；', ';'}
+        # Minor punctuation for potential breaks
+        minor_punctuation = {'，', ',', '、'}
+    else:
+        # Latin-based languages
+        sentence_endings = {'.', '!', '?', ';'}
+        minor_punctuation = {',', ':'}
+
+    sentences = []
+    current_sentence = {
+        "text": "",
+        "start": None,
+        "end": None,
+        "words": []
+    }
+
+    for i, word_obj in enumerate(all_words):
+        word_text = word_obj.get("word", "")
+        word_start = word_obj.get("start")
+        word_end = word_obj.get("end")
+
+        # Skip words without timing information
+        if word_start is None or word_end is None:
+            continue
+
+        # Initialize sentence timing on first word
+        if current_sentence["start"] is None:
+            current_sentence["start"] = word_start
+
+        # Add word to current sentence
+        if current_sentence["text"]:
+            # Add space before word for Latin languages
+            if language not in ["zh", "ja", "ko"]:
+                current_sentence["text"] += " "
+
+        current_sentence["text"] += word_text
+        current_sentence["end"] = word_end
+        current_sentence["words"].append(word_obj)
+
+        # Check if we should end the current sentence
+        should_break = False
+        current_length = len(current_sentence["text"])
+
+        # Check for sentence-ending punctuation
+        ends_with_sentence_punct = any(word_text.rstrip().endswith(p) for p in sentence_endings)
+
+        # Check for minor punctuation (only break if we're near max_chars)
+        ends_with_minor_punct = any(word_text.rstrip().endswith(p) for p in minor_punctuation)
+
+        # Determine if we should break
+        if ends_with_sentence_punct:
+            # Always break on sentence-ending punctuation
+            should_break = True
+        elif current_length >= max_chars:
+            # Exceeded max_chars - break at next opportunity
+            if ends_with_minor_punct:
+                # Break at comma/minor punctuation
+                should_break = True
+            elif i < len(all_words) - 1:
+                # No punctuation but exceeded limit - check next word
+                next_word = all_words[i + 1].get("word", "")
+                # Look ahead - if next word starts with punctuation or we're way over, break now
+                if any(next_word.startswith(p) for p in sentence_endings | minor_punctuation):
+                    should_break = True
+                elif current_length >= max_chars * 1.5:
+                    # Way over limit, force break
+                    should_break = True
+
+        # Create sentence if we should break
+        if should_break and current_sentence["words"]:
+            sentences.append({
+                "text": current_sentence["text"].strip(),
+                "start": current_sentence["start"],
+                "end": current_sentence["end"],
+                "words": current_sentence["words"]
+            })
+            # Reset for next sentence
+            current_sentence = {
+                "text": "",
+                "start": None,
+                "end": None,
+                "words": []
+            }
+
+    # Add final sentence if any words remain
+    if current_sentence["words"]:
+        sentences.append({
+            "text": current_sentence["text"].strip(),
+            "start": current_sentence["start"],
+            "end": current_sentence["end"],
+            "words": current_sentence["words"]
+        })
+
+    return sentences
+
+
 class WhisperXAlignmentNode:
     """
     A ComfyUI node for aligning text transcripts with audio using WhisperX.
@@ -190,6 +318,13 @@ class WhisperXAlignmentNode:
                     "step": 10,
                     "display": "number"
                 }),
+                "max_chars_per_sentence": ("INT", {
+                    "default": 30,
+                    "min": 10,
+                    "max": 200,
+                    "step": 5,
+                    "display": "number"
+                }),
                 "return_char_alignments": ("BOOLEAN", {
                     "default": False
                 }),
@@ -206,8 +341,8 @@ class WhisperXAlignmentNode:
             }
         }
 
-    RETURN_TYPES = ("STRING", "STRING", "STRING")
-    RETURN_NAMES = ("aligned_segments", "word_segments", "alignment_info")
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = ("aligned_segments", "word_segments", "sentence_segments", "alignment_info")
     FUNCTION = "align_audio_text"
     CATEGORY = "audio/whisperx"
 
@@ -219,10 +354,11 @@ class WhisperXAlignmentNode:
         language: str,
         auto_segment: bool,
         max_chars_per_segment: int,
+        max_chars_per_sentence: int,
         return_char_alignments: bool,
         model_name: str = "auto",
         device: str = "auto"
-    ) -> Tuple[str, str, str]:
+    ) -> Tuple[str, str, str, str]:
         """
         Align transcription segments with audio to get accurate word-level timestamps.
 
@@ -233,12 +369,13 @@ class WhisperXAlignmentNode:
             language: Language code for alignment model
             auto_segment: Whether to automatically segment the text
             max_chars_per_segment: Maximum characters per segment when auto_segment is True
+            max_chars_per_sentence: Maximum characters per sentence for sentence-level output
             return_char_alignments: Whether to return character-level alignments
             model_name: Optional model name to force-load (empty = auto-select by language)
             device: Device to run on (auto, cuda, or cpu)
 
         Returns:
-            Tuple of (aligned_segments_json, word_segments_json, alignment_info_json)
+            Tuple of (aligned_segments_json, word_segments_json, sentence_segments_json, alignment_info_json)
         """
         try:
             import whisperx
@@ -353,6 +490,15 @@ class WhisperXAlignmentNode:
                 for word in segment["words"]:
                     word_segments.append(word)
 
+        # Group words into sentence-level segments
+        print(f"Grouping words into sentences with max_chars_per_sentence={max_chars_per_sentence}")
+        sentence_segments = group_words_into_sentences(
+            aligned_segments,
+            max_chars=max_chars_per_sentence,
+            language=language
+        )
+        print(f"Created {len(sentence_segments)} sentence-level segments")
+
         # Create alignment info
         alignment_info = {
             "language": language,
@@ -361,7 +507,9 @@ class WhisperXAlignmentNode:
             "input_type": input_type,
             "auto_segment": auto_segment,
             "max_chars_per_segment": max_chars_per_segment if auto_segment else None,
+            "max_chars_per_sentence": max_chars_per_sentence,
             "num_segments": len(aligned_segments),
+            "num_sentences": len(sentence_segments),
             "num_words": len(word_segments),
             "return_char_alignments": return_char_alignments,
             "audio_duration_seconds": audio_array.shape[0] / 16000,
@@ -374,12 +522,13 @@ class WhisperXAlignmentNode:
                 alignment_info["total_duration"] = max([t[1] for t in times]) if times else 0
                 alignment_info["average_word_duration"] = sum([t[1] - t[0] for t in times]) / len(times)
 
-        print(f"Alignment complete! Processed {len(aligned_segments)} segments and {len(word_segments)} words")
+        print(f"Alignment complete! Processed {len(aligned_segments)} segments, {len(sentence_segments)} sentences, and {len(word_segments)} words")
 
         # Return as JSON strings
         return (
             json.dumps(aligned_segments, indent=2, ensure_ascii=False),
             json.dumps(word_segments, indent=2, ensure_ascii=False),
+            json.dumps(sentence_segments, indent=2, ensure_ascii=False),
             json.dumps(alignment_info, indent=2, ensure_ascii=False)
         )
 

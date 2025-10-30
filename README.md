@@ -6,8 +6,9 @@ A professional ComfyUI custom node for accurate text-audio alignment using [Whis
 
 ## Features
 
-- **WhisperX Alignment Node**: Accurate word-level timestamp alignment
+- **WhisperX Alignment Node**: Accurate word-level and sentence-level timestamp alignment
 - **Multi-language UI**: Node interface automatically switches between English and Chinese based on ComfyUI's language settings
+- **Multiple Output Levels**: Segment-level, sentence-level (configurable ~30 chars), and word-level timestamps
 - Plain text and JSON input support
 - Automatic text segmentation with customizable sentence splitting
 - Support for multiple languages (en, fr, de, es, it, pt, nl, ja, zh)
@@ -48,13 +49,15 @@ Aligns text transcripts with audio to get accurate word-level timestamps. Suppor
 - `language` (DROPDOWN): Language code for alignment model
 - `auto_segment` (BOOLEAN): Automatically segment text into smaller chunks (default: True)
 - `max_chars_per_segment` (INT): Maximum characters per segment when auto_segment is enabled (default: 200, range: 50-1000)
+- `max_chars_per_sentence` (INT): Maximum characters per sentence for sentence-level output (default: 30, range: 10-200)
 - `return_char_alignments` (BOOLEAN): Return character-level alignments (default: False)
 - `model_name` (STRING, optional): Specific model name to use (default: "auto" - auto-select by language)
 - `device` (DROPDOWN): Device to use (auto, cuda, cpu)
 
 **Outputs:**
-- `aligned_segments` (STRING): Segments with accurate timestamps
+- `aligned_segments` (STRING): Segments with accurate timestamps (larger chunks based on max_chars_per_segment)
 - `word_segments` (STRING): Individual words with timestamps
+- `sentence_segments` (STRING): Sentence-level segments with timestamps (approx. max_chars_per_sentence chars each)
 - `alignment_info` (STRING): Alignment statistics and metadata
 
 **Example Plain Text Input:**
@@ -87,6 +90,28 @@ Hello world. How are you today? I'm doing great!
     "start": 1.05,
     "end": 1.67,
     "score": 0.97
+  }
+]
+```
+
+**Example Sentence Segments Output:**
+```json
+[
+  {
+    "text": "Hello world. How are you today?",
+    "start": 0.52,
+    "end": 3.45,
+    "words": [
+      {"word": "Hello", "start": 0.52, "end": 0.89, "score": 0.95},
+      {"word": "world", "start": 1.05, "end": 1.67, "score": 0.97},
+      ...
+    ]
+  },
+  {
+    "text": "I'm doing great!",
+    "start": 3.45,
+    "end": 5.20,
+    "words": [...]
   }
 ]
 ```

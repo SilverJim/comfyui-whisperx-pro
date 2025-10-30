@@ -27,6 +27,10 @@
         "name": "Max Chars Per Segment",
         "tooltip": "Maximum characters per segment when auto-segment is enabled (50-1000)"
       },
+      "max_chars_per_sentence": {
+        "name": "Max Chars Per Sentence",
+        "tooltip": "Maximum characters per sentence for sentence-level output (10-200)"
+      },
       "return_char_alignments": {
         "name": "Return Char Alignments",
         "tooltip": "Include character-level alignment in addition to word-level"
@@ -43,13 +47,17 @@
     "outputs": {
       "0": {
         "name": "Aligned Segments",
-        "tooltip": "JSON array of text segments with accurate timestamps"
+        "tooltip": "JSON array of text segments with accurate timestamps (based on max_chars_per_segment)"
       },
       "1": {
         "name": "Word Segments",
         "tooltip": "JSON array of individual words with precise timing"
       },
       "2": {
+        "name": "Sentence Segments",
+        "tooltip": "JSON array of sentence-level segments (approx. max_chars_per_sentence chars each) with timestamps and word details"
+      },
+      "3": {
         "name": "Alignment Info",
         "tooltip": "Metadata about the alignment process (model used, statistics, etc.)"
       }
