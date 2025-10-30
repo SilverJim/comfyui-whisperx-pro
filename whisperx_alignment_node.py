@@ -394,7 +394,7 @@ class WhisperXAlignmentNode:
                     "placeholder": "auto = auto-select by language, or specify model name"
                 }),
                 "model_source": (["huggingface", "modelscope"], {
-                    "default": "huggingface"
+                    "default": "modelscope"
                 }),
                 "device": (["auto", "cuda", "cpu"], {
                     "default": "auto"
@@ -418,7 +418,7 @@ class WhisperXAlignmentNode:
         max_chars_per_sentence: int,
         return_char_alignments: bool,
         model_name: str = "auto",
-        model_source: str = "huggingface",
+        model_source: str = "modelscope",
         device: str = "auto"
     ) -> Tuple[str, str, str, str]:
         """

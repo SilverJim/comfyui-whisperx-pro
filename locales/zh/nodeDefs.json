@@ -41,7 +41,7 @@
       },
       "model_source": {
         "name": "模型来源",
-        "tooltip": "选择模型来源：'huggingface'（默认）或 'modelscope'（魔塔社区，国内更快）"
+        "tooltip": "选择模型来源：'modelscope'（魔塔社区，默认，国内更快）或 'huggingface'"
       },
       "device": {
         "name": "设备",

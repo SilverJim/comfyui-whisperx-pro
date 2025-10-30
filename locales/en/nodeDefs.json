@@ -41,7 +41,7 @@
       },
       "model_source": {
         "name": "Model Source",
-        "tooltip": "Choose model source: 'huggingface' (default) or 'modelscope' (魔塔社区, faster in China)"
+        "tooltip": "Choose model source: 'modelscope' (魔塔社区, default, faster in China) or 'huggingface'"
       },
       "device": {
         "name": "Device",

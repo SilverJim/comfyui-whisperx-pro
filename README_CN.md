@@ -53,7 +53,7 @@ pip install git+https://github.com/m-bain/whisperx.git
 - `max_chars_per_sentence`（整数）：句子级输出的每句最大字符数（默认：30，范围：10-200）
 - `return_char_alignments`（布尔值）：返回字符级对齐（默认：False）
 - `model_name`（字符串，可选）：指定要使用的模型名称（默认："auto" - 根据语言自动选择）
-- `model_source`（下拉选项，可选）：模型来源 - "huggingface" 或 "modelscope"（魔塔社区）（默认："huggingface"）
+- `model_source`（下拉选项，可选）：模型来源 - "huggingface" 或 "modelscope"（魔塔社区）（默认："modelscope"）
 - `device`（下拉选项）：使用的设备（auto、cuda、cpu）
 
 **输出结果：**

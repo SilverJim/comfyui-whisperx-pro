@@ -53,7 +53,7 @@ Aligns text transcripts with audio to get accurate word-level timestamps. Suppor
 - `max_chars_per_sentence` (INT): Maximum characters per sentence for sentence-level output (default: 30, range: 10-200)
 - `return_char_alignments` (BOOLEAN): Return character-level alignments (default: False)
 - `model_name` (STRING, optional): Specific model name to use (default: "auto" - auto-select by language)
-- `model_source` (DROPDOWN, optional): Model source to use - "huggingface" or "modelscope" (魔塔社区) (default: "huggingface")
+- `model_source` (DROPDOWN, optional): Model source to use - "huggingface" or "modelscope" (魔塔社区) (default: "modelscope")
 - `device` (DROPDOWN): Device to use (auto, cuda, cpu)
 
 **Outputs:**
