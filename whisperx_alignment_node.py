@@ -159,6 +159,7 @@ class WhisperXAlignmentNode:
         self.model_a = None
         self.metadata = None
         self.current_language = None
+        self.current_model_name = None
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     @classmethod
@@ -194,6 +195,11 @@ class WhisperXAlignmentNode:
                 }),
             },
             "optional": {
+                "model_name": ("STRING", {
+                    "default": "auto",
+                    "multiline": False,
+                    "placeholder": "auto = auto-select by language, or specify model name"
+                }),
                 "device": (["auto", "cuda", "cpu"], {
                     "default": "auto"
                 }),
@@ -214,19 +220,21 @@ class WhisperXAlignmentNode:
         auto_segment: bool,
         max_chars_per_segment: int,
         return_char_alignments: bool,
+        model_name: str = "auto",
         device: str = "auto"
     ) -> Tuple[str, str, str]:
         """
         Align transcription segments with audio to get accurate word-level timestamps.
 
         Args:
-            audio: Audio data dictionary from LoadAudioNode
+            audio: Audio data dictionary from ComfyUI audio loader
             input_type: Type of input (plain_text or json)
             text_input: Text input (plain text or JSON string)
             language: Language code for alignment model
             auto_segment: Whether to automatically segment the text
             max_chars_per_segment: Maximum characters per segment when auto_segment is True
             return_char_alignments: Whether to return character-level alignments
+            model_name: Optional model name to force-load (empty = auto-select by language)
             device: Device to run on (auto, cuda, or cpu)
 
         Returns:
@@ -295,15 +303,34 @@ class WhisperXAlignmentNode:
                 language = "en"  # Default to English
                 print(f"Warning: Could not auto-detect language, defaulting to 'en'")
 
+        # Determine which model to use
+        use_manual_model = model_name and model_name.strip() and model_name.lower() != "auto"
+
         # Load alignment model
-        print(f"Loading alignment model for language: {language}")
-        if self.model_a is None or self.current_language != language:
-            self.model_a, self.metadata = whisperx.load_align_model(
-                language_code=language,
-                device=device
-            )
-            self.current_language = language
-            print(f"Alignment model loaded successfully on device: {device}")
+        if use_manual_model:
+            # User specified a model manually
+            print(f"Loading manually specified alignment model: {model_name}")
+            model_changed = self.current_model_name != model_name
+            if self.model_a is None or model_changed:
+                self.model_a, self.metadata = whisperx.load_align_model(
+                    model_name=model_name,
+                    device=device
+                )
+                self.current_language = language
+                self.current_model_name = model_name
+                print(f"Manual alignment model '{model_name}' loaded successfully on device: {device}")
+        else:
+            # Auto-select model based on language
+            print(f"Auto-selecting alignment model for language: {language}")
+            language_changed = self.current_language != language
+            if self.model_a is None or language_changed or self.current_model_name != "auto":
+                self.model_a, self.metadata = whisperx.load_align_model(
+                    language_code=language,
+                    device=device
+                )
+                self.current_language = language
+                self.current_model_name = "auto"
+                print(f"Alignment model loaded successfully for language '{language}' on device: {device}")
 
         # Perform alignment
         print(f"Aligning {len(segments)} segments...")
@@ -329,6 +356,7 @@ class WhisperXAlignmentNode:
         # Create alignment info
         alignment_info = {
             "language": language,
+            "model": self.current_model_name if self.current_model_name else "auto",
             "device": device,
             "input_type": input_type,
             "auto_segment": auto_segment,

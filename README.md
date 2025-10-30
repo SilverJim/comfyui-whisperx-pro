@@ -48,6 +48,7 @@ Aligns text transcripts with audio to get accurate word-level timestamps. Suppor
 - `auto_segment` (BOOLEAN): Automatically segment text into smaller chunks (default: True)
 - `max_chars_per_segment` (INT): Maximum characters per segment when auto_segment is enabled (default: 200, range: 50-1000)
 - `return_char_alignments` (BOOLEAN): Return character-level alignments (default: False)
+- `model_name` (STRING, optional): Specific model name to use (default: "auto" - auto-select by language)
 - `device` (DROPDOWN): Device to use (auto, cuda, cpu)
 
 **Outputs:**
@@ -157,14 +158,34 @@ The auto-segmentation supports CJK languages:
 - Chinese (zh)
 - Auto-detection (auto)
 
+## Advanced Usage
+
+### Manual Model Selection
+
+By default, the alignment model is automatically selected based on the language you choose. However, you can manually specify a model if needed:
+
+1. Leave `model_name` as "auto" for automatic selection (recommended)
+2. Or specify a model name like "WAV2VEC2_ASR_BASE_960H" to force-load a specific model
+
+**When to use manual model selection:**
+- Testing different alignment models
+- Using custom fine-tuned models
+- Debugging alignment issues
+
+**Example:**
+- Language: "en"
+- Model Name: "auto" → Automatically loads the best English alignment model
+- Model Name: "WAV2VEC2_ASR_BASE_960H" → Forces this specific model
+
 ## Performance Tips
 
 1. **GPU Acceleration**: Use CUDA for faster processing
-2. **Batch Size**: Increase batch size for longer audio files (if you have enough VRAM)
-3. **Model Selection**:
-   - Use `tiny` or `base` for quick testing
-   - Use `medium` or `large-v3` for best accuracy
-4. **Compute Type**: Use `float16` on GPU for best speed/accuracy balance
+2. **Model Selection**:
+   - Leave `model_name` as "auto" for best results
+   - Manual model selection is for advanced users only
+3. **Text Segmentation**:
+   - Adjust `max_chars_per_segment` (100-300 recommended)
+   - Shorter segments = more accurate alignment but slower processing
 
 ## Requirements
 
