@@ -31,12 +31,25 @@ pip install git+https://github.com/m-bain/whisperx.git
 
 ## Nodes
 
-### WhisperX Transcribe
+### WhisperX Load Audio
 
-Transcribes audio files to text with high accuracy.
+Loads audio files and outputs audio data for use with other WhisperX nodes.
 
 **Inputs:**
-- `audio_path` (STRING): Path to your audio file (wav, mp3, etc.)
+- `audio_path` (STRING): Path to your audio file (wav, mp3, flac, m4a, etc.)
+
+**Outputs:**
+- `audio` (AUDIO): Audio data that can be connected to Transcribe or Alignment nodes
+- `audio_info` (STRING): JSON metadata about the loaded audio (duration, sample rate, etc.)
+
+**Note:** This node must be used first in your workflow to load audio before transcription or alignment.
+
+### WhisperX Transcribe
+
+Transcribes audio to text with high accuracy.
+
+**Inputs:**
+- `audio` (AUDIO): Audio data from LoadAudioNode
 - `model_name` (DROPDOWN): Model size (tiny, base, small, medium, large-v2, large-v3)
 - `language` (DROPDOWN): Language code or 'auto' for auto-detection
 - `batch_size` (INT): Batch size for processing (default: 16)
@@ -64,7 +77,7 @@ Transcribes audio files to text with high accuracy.
 Aligns text transcripts with audio to get accurate word-level timestamps. Supports both plain text and JSON input with automatic text segmentation.
 
 **Inputs:**
-- `audio_path` (STRING): Path to your audio file
+- `audio` (AUDIO): Audio data from LoadAudioNode
 - `input_type` (DROPDOWN): Input format - "plain_text" or "json"
 - `text_input` (STRING): Your text content (plain text or JSON segments)
 - `language` (DROPDOWN): Language code for alignment model
@@ -116,30 +129,37 @@ Hello world. How are you today? I'm doing great!
 
 ### Basic Transcription Workflow
 
-1. Add "WhisperX Transcribe" node
-2. Set `audio_path` to your audio file
-3. Select model size and language
-4. Run to get transcription
+1. Add "WhisperX Load Audio" node
+2. Set `audio_path` to your audio file path
+3. Add "WhisperX Transcribe" node
+4. Connect `audio` output from Load Audio to Transcribe node
+5. Select model size and language
+6. Run to get transcription
 
 ### Transcription + Alignment Workflow
 
-1. Add "WhisperX Transcribe" node for initial transcription
-2. Connect output to "WhisperX Alignment" node
-3. Set `input_type` to "json" in alignment node
-4. Connect the same audio file to alignment node
-5. Get accurate word-level timestamps
+1. Add "WhisperX Load Audio" node and set audio file path
+2. Add "WhisperX Transcribe" node
+3. Connect `audio` from Load Audio to Transcribe
+4. Add "WhisperX Alignment" node
+5. Connect `audio` from Load Audio to Alignment (use same audio!)
+6. Connect `segments` output from Transcribe to `text_input` in Alignment
+7. Set `input_type` to "json" in Alignment node
+8. Run to get accurate word-level timestamps
 
-### Plain Text Alignment (NEW!)
+### Plain Text Alignment
 
 Perfect for when you already have a transcript and just need timing:
 
-1. Add "WhisperX Alignment" node
-2. Set `input_type` to "plain_text"
-3. Paste your transcript in `text_input`
-4. Enable `auto_segment` for automatic sentence splitting
-5. Adjust `max_chars_per_segment` if needed (recommended: 100-300)
-6. Set audio path and language
-7. Run to get precise word-level timestamps
+1. Add "WhisperX Load Audio" node and set audio file path
+2. Add "WhisperX Alignment" node
+3. Connect `audio` output from Load Audio to Alignment node
+4. Set `input_type` to "plain_text"
+5. Paste your transcript in `text_input`
+6. Enable `auto_segment` for automatic sentence splitting
+7. Adjust `max_chars_per_segment` if needed (recommended: 100-300)
+8. Set language
+9. Run to get precise word-level timestamps
 
 **Example:**
 ```
@@ -149,20 +169,24 @@ Output: Automatically split into 3 segments with accurate word timings
 
 ### Using with External Transcripts (JSON)
 
-1. Add "WhisperX Alignment" node
-2. Set `input_type` to "json"
-3. Provide your own transcript in JSON format
-4. Set audio path and language
-5. Get precise timing alignment
+1. Add "WhisperX Load Audio" node and set audio file path
+2. Add "WhisperX Alignment" node
+3. Connect `audio` from Load Audio to Alignment
+4. Set `input_type` to "json"
+5. Provide your own transcript in JSON format in `text_input`
+6. Set language
+7. Run to get precise timing alignment
 
 ### Chinese/Japanese Text Alignment
 
 The auto-segmentation supports CJK languages:
 
-1. Set `language` to "zh" or "ja"
-2. Use `plain_text` input type
-3. Enable `auto_segment`
-4. The segmenter will use appropriate punctuation (。！？etc.)
+1. Add "WhisperX Load Audio" node with your audio file
+2. Add "WhisperX Alignment" node and connect audio
+3. Set `language` to "zh" or "ja"
+4. Use `plain_text` input type
+5. Enable `auto_segment`
+6. The segmenter will use appropriate punctuation (。！？etc.)
 
 **Example Chinese:**
 ```

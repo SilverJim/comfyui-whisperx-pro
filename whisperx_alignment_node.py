@@ -8,7 +8,79 @@ import json
 import re
 import torch
 import numpy as np
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Union
+
+
+class LoadAudioNode:
+    """
+    A ComfyUI node for loading audio files.
+    Outputs audio data that can be used by transcription and alignment nodes.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "audio_path": ("STRING", {
+                    "default": "",
+                    "multiline": False,
+                    "placeholder": "Path to audio file (wav, mp3, flac, m4a, etc.)"
+                }),
+            }
+        }
+
+    RETURN_TYPES = ("AUDIO", "STRING")
+    RETURN_NAMES = ("audio", "audio_info")
+    FUNCTION = "load_audio"
+    CATEGORY = "audio/whisperx"
+
+    def load_audio(self, audio_path: str) -> Tuple[Dict[str, Any], str]:
+        """
+        Load audio file using WhisperX's audio loader.
+
+        Args:
+            audio_path: Path to the audio file
+
+        Returns:
+            Tuple of (audio_data_dict, audio_info_json)
+        """
+        try:
+            import whisperx
+        except ImportError:
+            raise ImportError(
+                "WhisperX is not installed. Please install it using:\n"
+                "pip install git+https://github.com/m-bain/whisperx.git"
+            )
+
+        # Validate audio path
+        if not audio_path or not audio_path.strip():
+            raise ValueError("Audio path cannot be empty")
+
+        if not os.path.exists(audio_path):
+            raise FileNotFoundError(f"Audio file not found: {audio_path}")
+
+        # Load audio using WhisperX
+        print(f"Loading audio from: {audio_path}")
+        audio_array = whisperx.load_audio(audio_path)
+
+        # Get audio info
+        audio_info = {
+            "path": audio_path,
+            "sample_rate": 16000,  # WhisperX standardizes to 16kHz
+            "duration": len(audio_array) / 16000,
+            "shape": audio_array.shape,
+        }
+
+        # Package audio data for passing between nodes
+        audio_data = {
+            "waveform": audio_array,
+            "sample_rate": 16000,
+            "path": audio_path
+        }
+
+        print(f"Audio loaded: {audio_info['duration']:.2f}s, {audio_info['sample_rate']}Hz")
+
+        return (audio_data, json.dumps(audio_info, indent=2))
 
 
 def segment_text(text: str, max_chars: int = 200, language: str = "en") -> List[str]:
@@ -123,11 +195,7 @@ class WhisperXAlignmentNode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "audio_path": ("STRING", {
-                    "default": "",
-                    "multiline": False,
-                    "placeholder": "Path to audio file (wav, mp3, etc.)"
-                }),
+                "audio": ("AUDIO",),
                 "input_type": (["plain_text", "json"], {
                     "default": "plain_text"
                 }),
@@ -169,7 +237,7 @@ class WhisperXAlignmentNode:
 
     def align_audio_text(
         self,
-        audio_path: str,
+        audio: Dict[str, Any],
         input_type: str,
         text_input: str,
         language: str,
@@ -182,7 +250,7 @@ class WhisperXAlignmentNode:
         Align transcription segments with audio to get accurate word-level timestamps.
 
         Args:
-            audio_path: Path to the audio file
+            audio: Audio data dictionary from LoadAudioNode
             input_type: Type of input (plain_text or json)
             text_input: Text input (plain text or JSON string)
             language: Language code for alignment model
@@ -202,9 +270,16 @@ class WhisperXAlignmentNode:
                 "pip install git+https://github.com/m-bain/whisperx.git"
             )
 
-        # Validate audio path
-        if not os.path.exists(audio_path):
-            raise FileNotFoundError(f"Audio file not found: {audio_path}")
+        # Validate audio input
+        if not audio or not isinstance(audio, dict):
+            raise ValueError("Audio input must be a dictionary from LoadAudioNode")
+
+        if "waveform" not in audio:
+            raise ValueError("Audio data must contain 'waveform' key")
+
+        # Extract audio data
+        audio_array = audio["waveform"]
+        audio_path = audio.get("path", "unknown")
 
         # Validate text input
         if not text_input or not text_input.strip():
@@ -240,9 +315,7 @@ class WhisperXAlignmentNode:
         if device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        # Load audio
-        print(f"Loading audio from: {audio_path}")
-        audio = whisperx.load_audio(audio_path)
+        print(f"Using audio data from: {audio_path}")
 
         # Auto-detect language if needed
         if language == "auto":
@@ -268,7 +341,7 @@ class WhisperXAlignmentNode:
             segments,
             self.model_a,
             self.metadata,
-            audio,
+            audio_array,
             device,
             return_char_alignments=return_char_alignments
         )
@@ -328,11 +401,7 @@ class WhisperXTranscribeNode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "audio_path": ("STRING", {
-                    "default": "",
-                    "multiline": False,
-                    "placeholder": "Path to audio file"
-                }),
+                "audio": ("AUDIO",),
                 "model_name": (["tiny", "base", "small", "medium", "large-v2", "large-v3"], {
                     "default": "base"
                 }),
@@ -363,7 +432,7 @@ class WhisperXTranscribeNode:
 
     def transcribe_audio(
         self,
-        audio_path: str,
+        audio: Dict[str, Any],
         model_name: str,
         language: str,
         batch_size: int,
@@ -374,7 +443,7 @@ class WhisperXTranscribeNode:
         Transcribe audio using WhisperX.
 
         Args:
-            audio_path: Path to the audio file
+            audio: Audio data dictionary from LoadAudioNode
             model_name: Whisper model size
             language: Language code (or 'auto' for auto-detection)
             batch_size: Batch size for faster processing
@@ -392,9 +461,16 @@ class WhisperXTranscribeNode:
                 "pip install git+https://github.com/m-bain/whisperx.git"
             )
 
-        # Validate audio path
-        if not os.path.exists(audio_path):
-            raise FileNotFoundError(f"Audio file not found: {audio_path}")
+        # Validate audio input
+        if not audio or not isinstance(audio, dict):
+            raise ValueError("Audio input must be a dictionary from LoadAudioNode")
+
+        if "waveform" not in audio:
+            raise ValueError("Audio data must contain 'waveform' key")
+
+        # Extract audio data
+        audio_array = audio["waveform"]
+        audio_path = audio.get("path", "unknown")
 
         # Determine device
         if device == "auto":
@@ -416,15 +492,13 @@ class WhisperXTranscribeNode:
             self.current_model_name = model_name
             print(f"Model loaded successfully on device: {device}")
 
-        # Load audio
-        print(f"Loading audio from: {audio_path}")
-        audio = whisperx.load_audio(audio_path)
+        print(f"Using audio data from: {audio_path}")
 
         # Transcribe
         print(f"Transcribing audio with batch_size={batch_size}...")
         language_param = None if language == "auto" else language
         result = self.model.transcribe(
-            audio,
+            audio_array,
             batch_size=batch_size,
             language=language_param
         )
@@ -459,12 +533,14 @@ class WhisperXTranscribeNode:
 
 # Node class mappings for ComfyUI
 NODE_CLASS_MAPPINGS = {
+    "WhisperX Load Audio": LoadAudioNode,
     "WhisperX Alignment": WhisperXAlignmentNode,
     "WhisperX Transcribe": WhisperXTranscribeNode,
 }
 
 # Node display name mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "WhisperX Load Audio": "WhisperX Load Audio",
     "WhisperX Alignment": "WhisperX Alignment (Text-Audio Align)",
     "WhisperX Transcribe": "WhisperX Transcribe (Audio to Text)",
 }
