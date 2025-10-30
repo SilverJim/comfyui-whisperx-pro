@@ -1,0 +1,61 @@
+{
+  "workflow_name": "WhisperX Transcription and Alignment",
+  "description": "Example workflow showing how to use WhisperX nodes",
+  "nodes": [
+    {
+      "node_type": "WhisperX Transcribe",
+      "id": 1,
+      "inputs": {
+        "audio_path": "/path/to/your/audio.wav",
+        "model_name": "base",
+        "language": "auto",
+        "batch_size": 16,
+        "device": "auto",
+        "compute_type": "float16"
+      },
+      "outputs": {
+        "segments": "Connect to Alignment node",
+        "full_text": "Display or process",
+        "transcription_info": "View metadata"
+      }
+    },
+    {
+      "node_type": "WhisperX Alignment",
+      "id": 2,
+      "inputs": {
+        "audio_path": "/path/to/your/audio.wav",
+        "transcript_json": "Connect from Transcribe node segments output",
+        "language": "en",
+        "return_char_alignments": false,
+        "device": "auto"
+      },
+      "outputs": {
+        "aligned_segments": "Final aligned transcription",
+        "word_segments": "Word-level timestamps",
+        "alignment_info": "Alignment statistics"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "WhisperX Transcribe (1).segments",
+      "to": "WhisperX Alignment (2).transcript_json"
+    }
+  ],
+  "example_output": {
+    "word_segments": [
+      {
+        "word": "Hello",
+        "start": 0.52,
+        "end": 0.89,
+        "score": 0.95
+      },
+      {
+        "word": "world",
+        "start": 1.05,
+        "end": 1.67,
+        "score": 0.97
+      }
+    ]
+  }
+}
