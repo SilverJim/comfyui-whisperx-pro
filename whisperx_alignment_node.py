@@ -7,80 +7,50 @@ import os
 import json
 import re
 import torch
+import torchaudio
 import numpy as np
 from typing import Dict, List, Tuple, Any, Union
 
 
-class LoadAudioNode:
+def convert_audio_to_whisperx_format(audio: Dict[str, Any]) -> np.ndarray:
     """
-    A ComfyUI node for loading audio files.
-    Outputs audio data that can be used by transcription and alignment nodes.
+    Convert ComfyUI official audio format to WhisperX format.
+
+    Args:
+        audio: Audio dict from ComfyUI's official audio loader
+               Expected format: {"waveform": tensor, "sample_rate": int}
+
+    Returns:
+        numpy array in WhisperX format (16kHz mono)
     """
+    waveform = audio["waveform"]
+    sample_rate = audio["sample_rate"]
 
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "audio_path": ("STRING", {
-                    "default": "",
-                    "multiline": False,
-                    "placeholder": "Path to audio file (wav, mp3, flac, m4a, etc.)"
-                }),
-            }
-        }
+    # Convert to torch tensor if needed
+    if isinstance(waveform, np.ndarray):
+        waveform = torch.from_numpy(waveform)
 
-    RETURN_TYPES = ("AUDIO", "STRING")
-    RETURN_NAMES = ("audio", "audio_info")
-    FUNCTION = "load_audio"
-    CATEGORY = "audio/whisperx"
+    # Ensure tensor is float32
+    if waveform.dtype != torch.float32:
+        waveform = waveform.float()
 
-    def load_audio(self, audio_path: str) -> Tuple[Dict[str, Any], str]:
-        """
-        Load audio file using WhisperX's audio loader.
+    # Convert to mono if stereo (take mean of channels)
+    if waveform.dim() > 1 and waveform.shape[0] > 1:
+        waveform = torch.mean(waveform, dim=0, keepdim=True)
 
-        Args:
-            audio_path: Path to the audio file
+    # Remove channel dimension if present
+    if waveform.dim() > 1:
+        waveform = waveform.squeeze(0)
 
-        Returns:
-            Tuple of (audio_data_dict, audio_info_json)
-        """
-        try:
-            import whisperx
-        except ImportError:
-            raise ImportError(
-                "WhisperX is not installed. Please install it using:\n"
-                "pip install git+https://github.com/m-bain/whisperx.git"
-            )
+    # Resample to 16kHz if needed (WhisperX requirement)
+    if sample_rate != 16000:
+        resampler = torchaudio.transforms.Resample(sample_rate, 16000)
+        waveform = resampler(waveform)
 
-        # Validate audio path
-        if not audio_path or not audio_path.strip():
-            raise ValueError("Audio path cannot be empty")
+    # Convert to numpy
+    audio_array = waveform.numpy()
 
-        if not os.path.exists(audio_path):
-            raise FileNotFoundError(f"Audio file not found: {audio_path}")
-
-        # Load audio using WhisperX
-        print(f"Loading audio from: {audio_path}")
-        audio_array = whisperx.load_audio(audio_path)
-
-        # Get audio info
-        audio_info = {
-            "path": audio_path,
-            "sample_rate": 16000,  # WhisperX standardizes to 16kHz
-            "duration": len(audio_array) / 16000,
-            "shape": audio_array.shape,
-        }
-
-        # Package audio data for passing between nodes
-        audio_data = {
-            "waveform": audio_array,
-            "sample_rate": 16000,
-            "path": audio_path
-        }
-
-        print(f"Audio loaded: {audio_info['duration']:.2f}s, {audio_info['sample_rate']}Hz")
-
-        return (audio_data, json.dumps(audio_info, indent=2))
+    return audio_array
 
 
 def segment_text(text: str, max_chars: int = 200, language: str = "en") -> List[str]:
@@ -272,14 +242,14 @@ class WhisperXAlignmentNode:
 
         # Validate audio input
         if not audio or not isinstance(audio, dict):
-            raise ValueError("Audio input must be a dictionary from LoadAudioNode")
+            raise ValueError("Audio input must be a dictionary from ComfyUI audio loader")
 
-        if "waveform" not in audio:
-            raise ValueError("Audio data must contain 'waveform' key")
+        if "waveform" not in audio or "sample_rate" not in audio:
+            raise ValueError("Audio data must contain 'waveform' and 'sample_rate' keys")
 
-        # Extract audio data
-        audio_array = audio["waveform"]
-        audio_path = audio.get("path", "unknown")
+        # Convert audio to WhisperX format (16kHz mono numpy array)
+        print(f"Converting audio from {audio['sample_rate']}Hz to WhisperX format (16kHz mono)")
+        audio_array = convert_audio_to_whisperx_format(audio)
 
         # Validate text input
         if not text_input or not text_input.strip():
@@ -315,7 +285,7 @@ class WhisperXAlignmentNode:
         if device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        print(f"Using audio data from: {audio_path}")
+        print(f"Processing audio: {audio_array.shape[0] / 16000:.2f}s at 16kHz")
 
         # Auto-detect language if needed
         if language == "auto":
@@ -366,7 +336,7 @@ class WhisperXAlignmentNode:
             "num_segments": len(aligned_segments),
             "num_words": len(word_segments),
             "return_char_alignments": return_char_alignments,
-            "audio_path": audio_path,
+            "audio_duration_seconds": audio_array.shape[0] / 16000,
         }
 
         # Add timing statistics if available
@@ -463,14 +433,14 @@ class WhisperXTranscribeNode:
 
         # Validate audio input
         if not audio or not isinstance(audio, dict):
-            raise ValueError("Audio input must be a dictionary from LoadAudioNode")
+            raise ValueError("Audio input must be a dictionary from ComfyUI audio loader")
 
-        if "waveform" not in audio:
-            raise ValueError("Audio data must contain 'waveform' key")
+        if "waveform" not in audio or "sample_rate" not in audio:
+            raise ValueError("Audio data must contain 'waveform' and 'sample_rate' keys")
 
-        # Extract audio data
-        audio_array = audio["waveform"]
-        audio_path = audio.get("path", "unknown")
+        # Convert audio to WhisperX format (16kHz mono numpy array)
+        print(f"Converting audio from {audio['sample_rate']}Hz to WhisperX format (16kHz mono)")
+        audio_array = convert_audio_to_whisperx_format(audio)
 
         # Determine device
         if device == "auto":
@@ -492,7 +462,7 @@ class WhisperXTranscribeNode:
             self.current_model_name = model_name
             print(f"Model loaded successfully on device: {device}")
 
-        print(f"Using audio data from: {audio_path}")
+        print(f"Processing audio: {audio_array.shape[0] / 16000:.2f}s at 16kHz")
 
         # Transcribe
         print(f"Transcribing audio with batch_size={batch_size}...")
@@ -518,7 +488,7 @@ class WhisperXTranscribeNode:
             "compute_type": compute_type,
             "batch_size": batch_size,
             "num_segments": len(segments),
-            "audio_path": audio_path,
+            "audio_duration_seconds": audio_array.shape[0] / 16000,
         }
 
         print(f"Transcription complete! Generated {len(segments)} segments")
@@ -533,14 +503,12 @@ class WhisperXTranscribeNode:
 
 # Node class mappings for ComfyUI
 NODE_CLASS_MAPPINGS = {
-    "WhisperX Load Audio": LoadAudioNode,
     "WhisperX Alignment": WhisperXAlignmentNode,
     "WhisperX Transcribe": WhisperXTranscribeNode,
 }
 
 # Node display name mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "WhisperX Load Audio": "WhisperX Load Audio",
     "WhisperX Alignment": "WhisperX Alignment (Text-Audio Align)",
     "WhisperX Transcribe": "WhisperX Transcribe (Audio to Text)",
 }

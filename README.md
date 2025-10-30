@@ -31,25 +31,14 @@ pip install git+https://github.com/m-bain/whisperx.git
 
 ## Nodes
 
-### WhisperX Load Audio
-
-Loads audio files and outputs audio data for use with other WhisperX nodes.
-
-**Inputs:**
-- `audio_path` (STRING): Path to your audio file (wav, mp3, flac, m4a, etc.)
-
-**Outputs:**
-- `audio` (AUDIO): Audio data that can be connected to Transcribe or Alignment nodes
-- `audio_info` (STRING): JSON metadata about the loaded audio (duration, sample rate, etc.)
-
-**Note:** This node must be used first in your workflow to load audio before transcription or alignment.
+**Important:** These nodes require audio data from ComfyUI's official audio loading nodes (e.g., "Load Audio" from ComfyUI-Advanced-Audio or similar). Connect the AUDIO output from those nodes to these WhisperX nodes.
 
 ### WhisperX Transcribe
 
 Transcribes audio to text with high accuracy.
 
 **Inputs:**
-- `audio` (AUDIO): Audio data from LoadAudioNode
+- `audio` (AUDIO): Audio data from ComfyUI's official audio loader
 - `model_name` (DROPDOWN): Model size (tiny, base, small, medium, large-v2, large-v3)
 - `language` (DROPDOWN): Language code or 'auto' for auto-detection
 - `batch_size` (INT): Batch size for processing (default: 16)
@@ -77,7 +66,7 @@ Transcribes audio to text with high accuracy.
 Aligns text transcripts with audio to get accurate word-level timestamps. Supports both plain text and JSON input with automatic text segmentation.
 
 **Inputs:**
-- `audio` (AUDIO): Audio data from LoadAudioNode
+- `audio` (AUDIO): Audio data from ComfyUI's official audio loader
 - `input_type` (DROPDOWN): Input format - "plain_text" or "json"
 - `text_input` (STRING): Your text content (plain text or JSON segments)
 - `language` (DROPDOWN): Language code for alignment model
@@ -127,10 +116,16 @@ Hello world. How are you today? I'm doing great!
 
 ## Workflow Examples
 
+### Prerequisites
+
+You need a ComfyUI audio loading node first. Install one of these:
+- **ComfyUI-Advanced-Audio**: Provides "Load Audio" node
+- Or any other ComfyUI audio loader that outputs AUDIO type
+
 ### Basic Transcription Workflow
 
-1. Add "WhisperX Load Audio" node
-2. Set `audio_path` to your audio file path
+1. Add ComfyUI's "Load Audio" node
+2. Set audio file path
 3. Add "WhisperX Transcribe" node
 4. Connect `audio` output from Load Audio to Transcribe node
 5. Select model size and language
@@ -138,11 +133,11 @@ Hello world. How are you today? I'm doing great!
 
 ### Transcription + Alignment Workflow
 
-1. Add "WhisperX Load Audio" node and set audio file path
+1. Add ComfyUI's "Load Audio" node and set audio file path
 2. Add "WhisperX Transcribe" node
 3. Connect `audio` from Load Audio to Transcribe
 4. Add "WhisperX Alignment" node
-5. Connect `audio` from Load Audio to Alignment (use same audio!)
+5. Connect `audio` from Load Audio to Alignment (reuse same audio connection!)
 6. Connect `segments` output from Transcribe to `text_input` in Alignment
 7. Set `input_type` to "json" in Alignment node
 8. Run to get accurate word-level timestamps
@@ -151,7 +146,7 @@ Hello world. How are you today? I'm doing great!
 
 Perfect for when you already have a transcript and just need timing:
 
-1. Add "WhisperX Load Audio" node and set audio file path
+1. Add ComfyUI's "Load Audio" node and set audio file path
 2. Add "WhisperX Alignment" node
 3. Connect `audio` output from Load Audio to Alignment node
 4. Set `input_type` to "plain_text"
@@ -169,7 +164,7 @@ Output: Automatically split into 3 segments with accurate word timings
 
 ### Using with External Transcripts (JSON)
 
-1. Add "WhisperX Load Audio" node and set audio file path
+1. Add ComfyUI's "Load Audio" node and set audio file path
 2. Add "WhisperX Alignment" node
 3. Connect `audio` from Load Audio to Alignment
 4. Set `input_type` to "json"
@@ -181,7 +176,7 @@ Output: Automatically split into 3 segments with accurate word timings
 
 The auto-segmentation supports CJK languages:
 
-1. Add "WhisperX Load Audio" node with your audio file
+1. Add ComfyUI's "Load Audio" node with your audio file
 2. Add "WhisperX Alignment" node and connect audio
 3. Set `language` to "zh" or "ja"
 4. Use `plain_text` input type

@@ -1,17 +1,17 @@
 {
   "workflow_name": "WhisperX Transcription and Alignment",
-  "description": "Example workflow showing how to use WhisperX nodes",
+  "description": "Example workflow showing how to use WhisperX nodes with ComfyUI's official audio loader",
   "nodes": [
     {
-      "node_type": "WhisperX Load Audio",
+      "node_type": "Load Audio (ComfyUI Official)",
       "id": 1,
       "inputs": {
         "audio_path": "/path/to/your/audio.wav"
       },
       "outputs": {
-        "audio": "Connect to Transcribe and Alignment nodes",
-        "audio_info": "View audio metadata"
-      }
+        "audio": "Connect to Transcribe and Alignment nodes"
+      },
+      "notes": "Use ComfyUI's official Load Audio node (e.g., from ComfyUI-Advanced-Audio)"
     },
     {
       "node_type": "WhisperX Transcribe",
@@ -52,11 +52,11 @@
   ],
   "connections": [
     {
-      "from": "WhisperX Load Audio (1).audio",
+      "from": "Load Audio (1).audio",
       "to": "WhisperX Transcribe (2).audio"
     },
     {
-      "from": "WhisperX Load Audio (1).audio",
+      "from": "Load Audio (1).audio",
       "to": "WhisperX Alignment (3).audio"
     },
     {
