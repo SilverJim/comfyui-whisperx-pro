@@ -39,6 +39,10 @@
         "name": "Model Name",
         "tooltip": "Leave as 'auto' for automatic model selection, or specify a custom model name"
       },
+      "model_source": {
+        "name": "Model Source",
+        "tooltip": "Choose model source: 'huggingface' (default) or 'modelscope' (魔塔社区, faster in China)"
+      },
       "device": {
         "name": "Device",
         "tooltip": "Computing device to use (auto, cuda, or cpu)"

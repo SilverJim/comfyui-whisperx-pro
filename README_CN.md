@@ -9,6 +9,7 @@ ComfyUI 专业自定义节点，使用 [WhisperX](https://github.com/m-bain/whis
 - **WhisperX 对齐节点**：精确的词级和句子级时间戳对齐
 - **多语言界面**：节点界面根据 ComfyUI 的语言设置自动在中英文之间切换
 - **多级输出结构**：提供段落级、句子级（可配置约30字）和词级时间戳
+- **魔塔社区支持**：支持从魔塔社区 (ModelScope) 加载模型，国内下载更快
 - 支持纯文本和 JSON 输入
 - 自动文本分段，可自定义句子拆分
 - 支持多种语言（中文、英语、法语、德语、西班牙语、意大利语、葡萄牙语、荷兰语、日语）
@@ -52,6 +53,7 @@ pip install git+https://github.com/m-bain/whisperx.git
 - `max_chars_per_sentence`（整数）：句子级输出的每句最大字符数（默认：30，范围：10-200）
 - `return_char_alignments`（布尔值）：返回字符级对齐（默认：False）
 - `model_name`（字符串，可选）：指定要使用的模型名称（默认："auto" - 根据语言自动选择）
+- `model_source`（下拉选项，可选）：模型来源 - "huggingface" 或 "modelscope"（魔塔社区）（默认："huggingface"）
 - `device`（下拉选项）：使用的设备（auto、cuda、cpu）
 
 **输出结果：**

@@ -13,3 +13,6 @@ soundfile>=0.12.0
 
 # Alignment models
 ctc-segmentation>=1.7.0
+
+# Model sources (optional)
+modelscope  # For loading models from ModelScope (魔塔社区)

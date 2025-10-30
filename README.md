@@ -9,6 +9,7 @@ A professional ComfyUI custom node for accurate text-audio alignment using [Whis
 - **WhisperX Alignment Node**: Accurate word-level and sentence-level timestamp alignment
 - **Multi-language UI**: Node interface automatically switches between English and Chinese based on ComfyUI's language settings
 - **Multiple Output Levels**: Segment-level, sentence-level (configurable ~30 chars), and word-level timestamps
+- **ModelScope Support**: Load models from ModelScope (魔塔社区) for faster downloads in China
 - Plain text and JSON input support
 - Automatic text segmentation with customizable sentence splitting
 - Support for multiple languages (en, fr, de, es, it, pt, nl, ja, zh)
@@ -52,6 +53,7 @@ Aligns text transcripts with audio to get accurate word-level timestamps. Suppor
 - `max_chars_per_sentence` (INT): Maximum characters per sentence for sentence-level output (default: 30, range: 10-200)
 - `return_char_alignments` (BOOLEAN): Return character-level alignments (default: False)
 - `model_name` (STRING, optional): Specific model name to use (default: "auto" - auto-select by language)
+- `model_source` (DROPDOWN, optional): Model source to use - "huggingface" or "modelscope" (魔塔社区) (default: "huggingface")
 - `device` (DROPDOWN): Device to use (auto, cuda, cpu)
 
 **Outputs:**

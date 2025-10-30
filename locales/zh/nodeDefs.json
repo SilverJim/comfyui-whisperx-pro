@@ -39,6 +39,10 @@
         "name": "模型名称",
         "tooltip": "保留为 'auto' 进行自动模型选择，或指定自定义模型名称"
       },
+      "model_source": {
+        "name": "模型来源",
+        "tooltip": "选择模型来源：'huggingface'（默认）或 'modelscope'（魔塔社区，国内更快）"
+      },
       "device": {
         "name": "设备",
         "tooltip": "要使用的计算设备 (auto、cuda 或 cpu)"

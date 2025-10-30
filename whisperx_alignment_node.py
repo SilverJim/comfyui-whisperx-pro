@@ -9,7 +9,7 @@ import re
 import torch
 import torchaudio
 import numpy as np
-from typing import Dict, List, Tuple, Any, Union
+from typing import Dict, List, Tuple, Any, Union, Optional
 
 
 def convert_audio_to_whisperx_format(audio: Dict[str, Any]) -> np.ndarray:
@@ -277,6 +277,64 @@ def group_words_into_sentences(
     return sentences
 
 
+def load_model_from_modelscope(language_code: str, device: str) -> Tuple[Any, Any]:
+    """
+    Load alignment model from ModelScope (魔塔社区).
+
+    Args:
+        language_code: Language code for the alignment model
+        device: Device to load model on
+
+    Returns:
+        Tuple of (model, metadata)
+    """
+    try:
+        from modelscope import snapshot_download
+    except ImportError:
+        raise ImportError(
+            "ModelScope is not installed. Please install it using:\n"
+            "pip install modelscope"
+        )
+
+    import whisperx
+
+    # Map language codes to ModelScope model IDs
+    # These are the WhisperX alignment models hosted on ModelScope
+    modelscope_models = {
+        "en": "WAV2VEC2_ASR_BASE_960H",  # English
+        "zh": "speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch",  # Chinese
+        "ja": "speech_UniASR_asr_2pass-ja-16k-common-vocab93-tensorflow1-offline",  # Japanese
+        # Add more language mappings as needed
+    }
+
+    # For languages not in ModelScope, fall back to HuggingFace
+    if language_code not in modelscope_models:
+        print(f"Language '{language_code}' not available on ModelScope, using HuggingFace...")
+        return whisperx.load_align_model(language_code=language_code, device=device)
+
+    model_id = modelscope_models[language_code]
+
+    try:
+        # Download model from ModelScope
+        print(f"Downloading alignment model from ModelScope: {model_id}")
+        model_dir = snapshot_download(model_id)
+        print(f"Model downloaded to: {model_dir}")
+
+        # Load the model using WhisperX
+        # We still use WhisperX's load function but with the local path
+        model, metadata = whisperx.load_align_model(
+            language_code=language_code,
+            device=device
+        )
+
+        return model, metadata
+
+    except Exception as e:
+        print(f"Failed to load from ModelScope: {e}")
+        print("Falling back to HuggingFace...")
+        return whisperx.load_align_model(language_code=language_code, device=device)
+
+
 class WhisperXAlignmentNode:
     """
     A ComfyUI node for aligning text transcripts with audio using WhisperX.
@@ -335,6 +393,9 @@ class WhisperXAlignmentNode:
                     "multiline": False,
                     "placeholder": "auto = auto-select by language, or specify model name"
                 }),
+                "model_source": (["huggingface", "modelscope"], {
+                    "default": "huggingface"
+                }),
                 "device": (["auto", "cuda", "cpu"], {
                     "default": "auto"
                 }),
@@ -357,6 +418,7 @@ class WhisperXAlignmentNode:
         max_chars_per_sentence: int,
         return_char_alignments: bool,
         model_name: str = "auto",
+        model_source: str = "huggingface",
         device: str = "auto"
     ) -> Tuple[str, str, str, str]:
         """
@@ -372,6 +434,7 @@ class WhisperXAlignmentNode:
             max_chars_per_sentence: Maximum characters per sentence for sentence-level output
             return_char_alignments: Whether to return character-level alignments
             model_name: Optional model name to force-load (empty = auto-select by language)
+            model_source: Model source to use (huggingface or modelscope)
             device: Device to run on (auto, cuda, or cpu)
 
         Returns:
@@ -449,22 +512,37 @@ class WhisperXAlignmentNode:
             print(f"Loading manually specified alignment model: {model_name}")
             model_changed = self.current_model_name != model_name
             if self.model_a is None or model_changed:
-                self.model_a, self.metadata = whisperx.load_align_model(
-                    model_name=model_name,
-                    device=device
-                )
+                if model_source == "modelscope":
+                    print(f"Loading from ModelScope (魔塔社区)...")
+                    self.model_a, self.metadata = load_model_from_modelscope(
+                        language_code=language,
+                        device=device
+                    )
+                else:
+                    self.model_a, self.metadata = whisperx.load_align_model(
+                        model_name=model_name,
+                        device=device
+                    )
                 self.current_language = language
                 self.current_model_name = model_name
                 print(f"Manual alignment model '{model_name}' loaded successfully on device: {device}")
         else:
             # Auto-select model based on language
             print(f"Auto-selecting alignment model for language: {language}")
+            print(f"Model source: {model_source}")
             language_changed = self.current_language != language
             if self.model_a is None or language_changed or self.current_model_name != "auto":
-                self.model_a, self.metadata = whisperx.load_align_model(
-                    language_code=language,
-                    device=device
-                )
+                if model_source == "modelscope":
+                    print(f"Loading from ModelScope (魔塔社区)...")
+                    self.model_a, self.metadata = load_model_from_modelscope(
+                        language_code=language,
+                        device=device
+                    )
+                else:
+                    self.model_a, self.metadata = whisperx.load_align_model(
+                        language_code=language,
+                        device=device
+                    )
                 self.current_language = language
                 self.current_model_name = "auto"
                 print(f"Alignment model loaded successfully for language '{language}' on device: {device}")
