@@ -1,6 +1,6 @@
 {
-  "workflow_name": "WhisperX Transcription and Alignment",
-  "description": "Example workflow showing how to use WhisperX nodes with ComfyUI's official audio loader",
+  "workflow_name": "WhisperX Text-Audio Alignment",
+  "description": "Example workflow showing how to align text transcripts with audio using WhisperX Alignment node",
   "nodes": [
     {
       "node_type": "Load Audio (ComfyUI Official)",
@@ -9,59 +9,35 @@
         "audio_path": "/path/to/your/audio.wav"
       },
       "outputs": {
-        "audio": "Connect to Transcribe and Alignment nodes"
+        "audio": "Connect to WhisperX Alignment node"
       },
       "notes": "Use ComfyUI's official Load Audio node (e.g., from ComfyUI-Advanced-Audio)"
     },
     {
-      "node_type": "WhisperX Transcribe",
+      "node_type": "WhisperX Alignment",
       "id": 2,
       "inputs": {
         "audio": "Connect from Load Audio node",
-        "model_name": "base",
-        "language": "auto",
-        "batch_size": 16,
-        "device": "auto",
-        "compute_type": "float16"
-      },
-      "outputs": {
-        "segments": "Connect to Alignment node",
-        "full_text": "Display or process",
-        "transcription_info": "View metadata"
-      }
-    },
-    {
-      "node_type": "WhisperX Alignment",
-      "id": 3,
-      "inputs": {
-        "audio": "Connect from Load Audio node (same as Transcribe)",
-        "input_type": "json",
-        "text_input": "Connect from Transcribe node segments output",
+        "input_type": "plain_text",
+        "text_input": "Paste your transcript here or use JSON format",
         "language": "en",
-        "auto_segment": false,
+        "auto_segment": true,
         "max_chars_per_segment": 200,
         "return_char_alignments": false,
         "device": "auto"
       },
       "outputs": {
-        "aligned_segments": "Final aligned transcription",
+        "aligned_segments": "Segments with accurate timestamps",
         "word_segments": "Word-level timestamps",
         "alignment_info": "Alignment statistics"
-      }
+      },
+      "notes": "For JSON input, set input_type to 'json' and provide segments from a transcription tool"
     }
   ],
   "connections": [
     {
       "from": "Load Audio (1).audio",
-      "to": "WhisperX Transcribe (2).audio"
-    },
-    {
-      "from": "Load Audio (1).audio",
-      "to": "WhisperX Alignment (3).audio"
-    },
-    {
-      "from": "WhisperX Transcribe (2).segments",
-      "to": "WhisperX Alignment (3).text_input"
+      "to": "WhisperX Alignment (2).audio"
     }
   ],
   "example_output": {

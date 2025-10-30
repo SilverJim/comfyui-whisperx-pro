@@ -4,8 +4,9 @@ A professional ComfyUI custom node package that provides accurate audio transcri
 
 ## Features
 
-- **WhisperX Transcribe Node**: Fast audio transcription with batching support
 - **WhisperX Alignment Node**: Accurate word-level timestamp alignment
+- Plain text and JSON input support
+- Automatic text segmentation with customizable sentence splitting
 - Support for multiple languages (en, fr, de, es, it, pt, nl, ja, zh)
 - GPU acceleration support
 - Character-level and word-level alignment options
@@ -31,35 +32,7 @@ pip install git+https://github.com/m-bain/whisperx.git
 
 ## Nodes
 
-**Important:** These nodes require audio data from ComfyUI's official audio loading nodes (e.g., "Load Audio" from ComfyUI-Advanced-Audio or similar). Connect the AUDIO output from those nodes to these WhisperX nodes.
-
-### WhisperX Transcribe
-
-Transcribes audio to text with high accuracy.
-
-**Inputs:**
-- `audio` (AUDIO): Audio data from ComfyUI's official audio loader
-- `model_name` (DROPDOWN): Model size (tiny, base, small, medium, large-v2, large-v3)
-- `language` (DROPDOWN): Language code or 'auto' for auto-detection
-- `batch_size` (INT): Batch size for processing (default: 16)
-- `device` (DROPDOWN): Device to use (auto, cuda, cpu)
-- `compute_type` (DROPDOWN): Precision (int8, float16, float32)
-
-**Outputs:**
-- `segments` (STRING): JSON array of transcription segments
-- `full_text` (STRING): Complete transcription text
-- `transcription_info` (STRING): Metadata about the transcription
-
-**Example Segment Output:**
-```json
-[
-  {
-    "start": 0.5,
-    "end": 2.3,
-    "text": "Hello world"
-  }
-]
-```
+**Important:** This node requires audio data from ComfyUI's official audio loading nodes (e.g., "Load Audio" from ComfyUI-Advanced-Audio or similar). Connect the AUDIO output from those nodes to the WhisperX Alignment node.
 
 ### WhisperX Alignment
 
@@ -121,26 +94,6 @@ Hello world. How are you today? I'm doing great!
 You need a ComfyUI audio loading node first. Install one of these:
 - **ComfyUI-Advanced-Audio**: Provides "Load Audio" node
 - Or any other ComfyUI audio loader that outputs AUDIO type
-
-### Basic Transcription Workflow
-
-1. Add ComfyUI's "Load Audio" node
-2. Set audio file path
-3. Add "WhisperX Transcribe" node
-4. Connect `audio` output from Load Audio to Transcribe node
-5. Select model size and language
-6. Run to get transcription
-
-### Transcription + Alignment Workflow
-
-1. Add ComfyUI's "Load Audio" node and set audio file path
-2. Add "WhisperX Transcribe" node
-3. Connect `audio` from Load Audio to Transcribe
-4. Add "WhisperX Alignment" node
-5. Connect `audio` from Load Audio to Alignment (reuse same audio connection!)
-6. Connect `segments` output from Transcribe to `text_input` in Alignment
-7. Set `input_type` to "json" in Alignment node
-8. Run to get accurate word-level timestamps
 
 ### Plain Text Alignment
 
