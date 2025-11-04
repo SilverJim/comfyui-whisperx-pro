@@ -1,34 +1,34 @@
 # ComfyUI WhisperX Pro
 
-English | [简体中文](README_CN.md)
+简体中文 | [English](README_EN.md)
 
-A professional ComfyUI custom node for accurate audio-text alignment and SRT subtitle generation using [WhisperX](https://github.com/m-bain/whisperx).
+ComfyUI 专业自定义节点，使用 [WhisperX](https://github.com/m-bain/whisperx) 提供精确的音频文本对齐和 SRT 字幕生成功能。
 
-## ✨ Features
+## ✨ 功能特性
 
-- 🎯 **Precise Alignment**: Word-level timestamp alignment using WhisperX
-- 🎬 **SRT Subtitle Generation**: Automatically generate SRT subtitle files with customizable formatting
-- 🌍 **Multi-language Support**: Support for 9 languages (English, Chinese, French, German, Spanish, Italian, Portuguese, Dutch, Japanese)
-- 🌐 **Bilingual UI**: Node interface automatically switches between English and Chinese based on system locale
-- 📦 **Local Model Loading**: Load alignment models from ComfyUI/models directory - no automatic downloads
-- ⚡ **GPU Acceleration**: CUDA support for faster processing
-- 🎛️ **Flexible Configuration**: Customizable line duration, character limits, and punctuation triggers
-- 🔧 **Easy Integration**: Seamlessly integrates with ComfyUI's audio loading nodes
+- 🎯 **精确对齐**：使用 WhisperX 实现词级时间戳对齐
+- 🎬 **SRT 字幕生成**：自动生成 SRT 格式字幕文件，支持自定义格式
+- 🌍 **多语言支持**：支持 9 种语言（英语、中文、法语、德语、西班牙语、意大利语、葡萄牙语、荷兰语、日语）
+- 🌐 **双语界面**：节点界面根据系统语言自动在中英文之间切换
+- 📦 **本地模型加载**：从 ComfyUI/models 目录加载对齐模型 - 无需自动下载
+- ⚡ **GPU 加速**：支持 CUDA 以获得更快的处理速度
+- 🎛️ **灵活配置**：可自定义行时长、字符限制和标点触发器
+- 🔧 **轻松集成**：与 ComfyUI 音频加载节点无缝集成
 
-## 📋 Table of Contents
+## 📋 目录
 
-- [Installation](#-installation)
-- [Model Setup](#-model-setup)
-- [Node Overview](#-node-overview)
-- [Usage Examples](#-usage-examples)
-- [Supported Languages](#-supported-languages)
-- [Configuration Tips](#-configuration-tips)
-- [Troubleshooting](#-troubleshooting)
-- [Credits](#-credits)
+- [安装](#-安装)
+- [模型设置](#-模型设置)
+- [节点概述](#-节点概述)
+- [使用示例](#-使用示例)
+- [支持的语言](#-支持的语言)
+- [配置建议](#-配置建议)
+- [故障排除](#-故障排除)
+- [致谢](#-致谢)
 
-## 🚀 Installation
+## 🚀 安装
 
-### Step 1: Install the Custom Node
+### 步骤 1：安装自定义节点
 
 ```bash
 cd ComfyUI/custom_nodes
@@ -37,60 +37,60 @@ cd comfyui-whisperx-pro
 pip install -r requirements.txt
 ```
 
-### Step 2: Install WhisperX (if needed)
+### 步骤 2：安装 WhisperX（如需要）
 
-If the automatic installation fails, install WhisperX manually:
+如果自动安装失败，可以手动安装 WhisperX：
 
 ```bash
 pip install git+https://github.com/m-bain/whisperx.git
 ```
 
-For CUDA GPU support, ensure PyTorch is installed with CUDA:
+对于 CUDA GPU 支持，请确保安装了带 CUDA 的 PyTorch：
 
 ```bash
 pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
-### Step 3: Restart ComfyUI
+### 步骤 3：重启 ComfyUI
 
-After installation, restart ComfyUI to load the new node.
+安装完成后，重启 ComfyUI 以加载新节点。
 
-## 📦 Model Setup
+## 📦 模型设置
 
-### Model Directory Structure
+### 模型目录结构
 
-Models must be placed in: `ComfyUI/models/whisperx/[model_folder_name]/`
+模型必须放置在：`ComfyUI/models/whisperx/[模型文件夹名称]/`
 
-The node will automatically load the appropriate alignment model based on the selected language.
+节点将根据选择的语言自动加载相应的对齐模型。
 
-### Download Pre-trained Alignment Models
+### 下载预训练对齐模型
 
-#### Option 1: HuggingFace (Worldwide)
+#### 选项 1：HuggingFace（全球）
 
-Download the complete model folder (all files including `config.json`, `pytorch_model.bin`, `preprocessor_config.json`, `tokenizer_config.json`, `vocab.json`):
+下载完整的模型文件夹（所有文件，包括 `config.json`、`pytorch_model.bin`、`preprocessor_config.json`、`tokenizer_config.json`、`vocab.json`）：
 
-- **English**: [wav2vec2-large-xlsr-53-english](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-english)
-- **Chinese**: [wav2vec2-large-xlsr-53-chinese-zh-cn](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn)
-- **French**: [wav2vec2-large-xlsr-53-french](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-french)
-- **German**: [wav2vec2-large-xlsr-53-german](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-german)
-- **Spanish**: [wav2vec2-large-xlsr-53-spanish](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-spanish)
-- **Italian**: [wav2vec2-large-xlsr-53-italian](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-italian)
-- **Portuguese**: [wav2vec2-large-xlsr-53-portuguese](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-portuguese)
-- **Japanese**: [wav2vec2-large-xlsr-53-japanese](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-japanese)
-- **Dutch**: [wav2vec2-large-xlsr-53-dutch](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-dutch)
+- **英语**：[wav2vec2-large-xlsr-53-english](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-english)
+- **中文**：[wav2vec2-large-xlsr-53-chinese-zh-cn](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn)
+- **法语**：[wav2vec2-large-xlsr-53-french](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-french)
+- **德语**：[wav2vec2-large-xlsr-53-german](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-german)
+- **西班牙语**：[wav2vec2-large-xlsr-53-spanish](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-spanish)
+- **意大利语**：[wav2vec2-large-xlsr-53-italian](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-italian)
+- **葡萄牙语**：[wav2vec2-large-xlsr-53-portuguese](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-portuguese)
+- **日语**：[wav2vec2-large-xlsr-53-japanese](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-japanese)
+- **荷兰语**：[wav2vec2-large-xlsr-53-dutch](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-dutch)
 
-#### Option 2: ModelScope (Faster for China)
+#### 选项 2：魔塔社区（国内更快）
 
-- **English**: [wav2vec2-large-xlsr-53-english](https://modelscope.cn/models/jonatasgrosman/wav2vec2-large-xlsr-53-english)
-- **Chinese**: [wav2vec2-large-xlsr-53-chinese-zh-cn](https://modelscope.cn/models/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn)
-- Other languages available similarly
+- **英语**：[wav2vec2-large-xlsr-53-english](https://modelscope.cn/models/jonatasgrosman/wav2vec2-large-xlsr-53-english)
+- **中文**：[wav2vec2-large-xlsr-53-chinese-zh-cn](https://modelscope.cn/models/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn)
+- 其他语言类似
 
-### Example: Installing Chinese Model
+### 示例：安装中文模型
 
 ```bash
 cd ComfyUI/models/whisperx
 
-# Download all files from the model page and place them in:
+# 从模型页面下载所有文件，并放置在：
 # wav2vec2-large-xlsr-53-chinese-zh-cn/
 #   ├── config.json
 #   ├── pytorch_model.bin
@@ -99,52 +99,52 @@ cd ComfyUI/models/whisperx
 #   └── vocab.json
 ```
 
-## 📦 Node Overview
+## 📦 节点概述
 
-### WhisperX SRT Generator
+### WhisperX SRT 生成器
 
-This node aligns text with audio and generates SRT subtitle format output with precise word-level timestamps.
+该节点将文本与音频对齐，并生成带有精确词级时间戳的 SRT 字幕格式输出。
 
-#### Input Parameters
+#### 输入参数
 
-| Parameter | Type | Default | Range | Description |
-|-----------|------|---------|-------|-------------|
-| `audio` | AUDIO | Required | - | Audio data from ComfyUI's official audio loader |
-| `text` | STRING | Required | - | Text content to align with audio |
-| `language` | DROPDOWN | `zh` | en/fr/de/es/it/pt/nl/ja/zh | Language code for alignment model |
-| `max_sec` | FLOAT | 4.5 | 1.0 - 10.0 | Maximum duration per subtitle line (seconds) |
-| `max_ch` | INT | 28 | 10 - 100 | Maximum characters per subtitle line |
-| `punct` | STRING | `，。！？；、,.!?;…` | - | Punctuation marks that trigger line breaks |
-| `device` | DROPDOWN | `auto` | auto/cuda/cpu | Device to use for processing |
+| 参数 | 类型 | 默认值 | 范围 | 描述 |
+|------|------|--------|------|------|
+| `audio` | AUDIO | 必需 | - | 来自 ComfyUI 官方音频加载器的音频数据 |
+| `text` | STRING | 必需 | - | 要与音频对齐的文本内容 |
+| `language` | DROPDOWN | `zh` | en/fr/de/es/it/pt/nl/ja/zh | 对齐模型的语言代码 |
+| `max_sec` | FLOAT | 4.5 | 1.0 - 10.0 | 每行字幕的最大时长（秒） |
+| `max_ch` | INT | 28 | 10 - 100 | 每行字幕的最大字符数 |
+| `punct` | STRING | `，。！？；、,.!?;…` | - | 触发换行的标点符号 |
+| `device` | DROPDOWN | `auto` | auto/cuda/cpu | 用于处理的设备 |
 
-#### Output Results
+#### 输出结果
 
-| Output | Type | Description |
-|--------|------|-------------|
-| `SRT Content` | STRING | Generated SRT subtitle content with timestamps |
-| `Alignment Info` | STRING | JSON metadata about the alignment process |
+| 输出 | 类型 | 描述 |
+|------|------|------|
+| `SRT字幕内容` | STRING | 生成的带时间戳的 SRT 字幕内容 |
+| `对齐信息` | STRING | 关于对齐过程的 JSON 元数据 |
 
-#### Example Outputs
+#### 输出示例
 
-**SRT Content:**
+**SRT 内容：**
 ```srt
 1
 00:00:00,520 --> 00:00:02,350
-Hello everyone.
+大家好。
 
 2
 00:00:02,350 --> 00:00:04,180
-Today we're going to talk
+今天我们来讨论
 
 3
 00:00:04,180 --> 00:00:06,890
-about WhisperX.
+WhisperX 这个工具。
 ```
 
-**Alignment Info:**
+**对齐信息：**
 ```json
 {
-  "language": "en",
+  "language": "zh",
   "device": "cuda",
   "audio_duration_seconds": 10.5,
   "text_length": 87,
@@ -152,228 +152,228 @@ about WhisperX.
   "subtitle_lines": 8,
   "max_duration_per_line": 4.5,
   "max_characters_per_line": 28,
-  "punctuation_triggers": ",.!?;…"
+  "punctuation_triggers": "，。！？；、"
 }
 ```
 
-## 🎯 Usage Examples
+## 🎯 使用示例
 
-### Prerequisites
+### 前置要求
 
-You need a ComfyUI audio loading node first. Install one of these:
-- **ComfyUI-Advanced-Audio**: Provides "Load Audio" node
-- Or any other ComfyUI audio loader that outputs AUDIO type
+您首先需要一个 ComfyUI 音频加载节点。安装以下任一选项：
+- **ComfyUI-Advanced-Audio**：提供 "Load Audio" 节点
+- 或任何其他输出 AUDIO 类型的 ComfyUI 音频加载器
 
-### Basic Workflow
+### 基本工作流
 
-1. **Add Audio Loading Node**
-   - Add "Load Audio" node (from ComfyUI-Advanced-Audio or similar)
-   - Set the path to your audio file
+1. **添加音频加载节点**
+   - 添加 "Load Audio" 节点（来自 ComfyUI-Advanced-Audio 或类似插件）
+   - 设置音频文件路径
 
-2. **Add WhisperX SRT Generator Node**
-   - Add "WhisperX SRT Generator" node to your workflow
-   - Connect the `audio` output from the audio loader to the node
+2. **添加 WhisperX SRT 生成器节点**
+   - 在工作流中添加 "WhisperX SRT Generator" 节点
+   - 将音频加载器的 `audio` 输出连接到该节点
 
-3. **Configure Parameters**
-   - Set `language` to match your audio (e.g., "en" for English, "zh" for Chinese)
-   - Paste your transcript in the `text` field
-   - Adjust timing parameters:
-     - `max_sec`: Control how long each subtitle line can be
-     - `max_ch`: Control how many characters per line
-     - `punct`: Specify which punctuation marks trigger line breaks
+3. **配置参数**
+   - 设置 `language` 以匹配您的音频（例如，英语为 "en"，中文为 "zh"）
+   - 在 `text` 字段中粘贴您的转录文本
+   - 调整时间参数：
+     - `max_sec`：控制每行字幕的时长
+     - `max_ch`：控制每行的字符数
+     - `punct`：指定哪些标点符号触发换行
 
-4. **Run and Export**
-   - Execute the workflow
-   - The node will output SRT-formatted subtitles
-   - Save the output to a `.srt` file using a text output node
+4. **运行和导出**
+   - 执行工作流
+   - 节点将输出 SRT 格式的字幕
+   - 使用文本输出节点将输出保存为 `.srt` 文件
 
-### Example 1: English Video Subtitles
+### 示例 1：英语视频字幕
 
-**Scenario**: You have an English video and want to generate subtitles
+**场景**：您有一个英语视频并想生成字幕
 
 ```
-Settings:
-- Language: en
-- Max Duration: 4.5 seconds
-- Max Characters: 28
-- Punctuation: ,.!?;…
+设置：
+- 语言：en
+- 最大时长：4.5 秒
+- 最大字符数：28
+- 标点符号：,.!?;…
 
-Input Text:
+输入文本：
 "Hello everyone. Today we're going to talk about WhisperX. It's an amazing tool for speech recognition and alignment. Let me show you how it works."
 
-Output:
-Automatically generates 4-6 subtitle lines with precise word-level timing
+输出：
+自动生成 4-6 行字幕，具有精确的词级时间戳
 ```
 
-### Example 2: Chinese Audio Subtitles
+### 示例 2：中文音频字幕
 
-**Scenario**: You have a Chinese podcast and want to generate subtitles
+**场景**：您有一个中文播客并想生成字幕
 
 ```
-Settings:
-- Language: zh
-- Max Duration: 4.5 seconds
-- Max Characters: 28
-- Punctuation: ，。！？；、
+设置：
+- 语言：zh
+- 最大时长：4.5 秒
+- 最大字符数：28
+- 标点符号：，。！？；、
 
-Input Text:
+输入文本：
 "大家好。今天我们来讨论一下WhisperX这个工具。它是一个非常强大的语音识别和对齐工具。让我来给大家演示一下它的使用方法。"
 
-Output:
-Automatically generates subtitle lines respecting Chinese punctuation rules
+输出：
+自动生成遵循中文标点规则的字幕行
 ```
 
-### Example 3: Multi-language Content
+### 示例 3：多语言内容
 
-For content mixing multiple languages, use the dominant language for the `language` parameter, or process each language segment separately.
+对于混合多种语言的内容，请为 `language` 参数使用主要语言，或分别处理每个语言段。
 
-## 🌍 Supported Languages
+## 🌍 支持的语言
 
-| Language | Code | Model Required |
-|----------|------|----------------|
-| English | `en` | wav2vec2-large-xlsr-53-english |
-| Chinese | `zh` | wav2vec2-large-xlsr-53-chinese-zh-cn |
-| French | `fr` | wav2vec2-large-xlsr-53-french |
-| German | `de` | wav2vec2-large-xlsr-53-german |
-| Spanish | `es` | wav2vec2-large-xlsr-53-spanish |
-| Italian | `it` | wav2vec2-large-xlsr-53-italian |
-| Portuguese | `pt` | wav2vec2-large-xlsr-53-portuguese |
-| Dutch | `nl` | wav2vec2-large-xlsr-53-dutch |
-| Japanese | `ja` | wav2vec2-large-xlsr-53-japanese |
+| 语言 | 代码 | 所需模型 |
+|------|------|----------|
+| 英语 | `en` | wav2vec2-large-xlsr-53-english |
+| 中文 | `zh` | wav2vec2-large-xlsr-53-chinese-zh-cn |
+| 法语 | `fr` | wav2vec2-large-xlsr-53-french |
+| 德语 | `de` | wav2vec2-large-xlsr-53-german |
+| 西班牙语 | `es` | wav2vec2-large-xlsr-53-spanish |
+| 意大利语 | `it` | wav2vec2-large-xlsr-53-italian |
+| 葡萄牙语 | `pt` | wav2vec2-large-xlsr-53-portuguese |
+| 荷兰语 | `nl` | wav2vec2-large-xlsr-53-dutch |
+| 日语 | `ja` | wav2vec2-large-xlsr-53-japanese |
 
-## ⚙️ Configuration Tips
+## ⚙️ 配置建议
 
-### Optimizing Subtitle Line Length
+### 优化字幕行长度
 
-**Short Lines (max_ch: 15-20, max_sec: 2-3)**
-- ✅ Good for: Social media videos, mobile viewing
-- ✅ Pros: Easy to read, good for fast-paced content
-- ❌ Cons: Many subtitle switches, can be distracting
+**短行（max_ch: 15-20，max_sec: 2-3）**
+- ✅ 适用于：社交媒体视频、移动端观看
+- ✅ 优点：易于阅读，适合快节奏内容
+- ❌ 缺点：字幕切换频繁，可能分散注意力
 
-**Medium Lines (max_ch: 25-35, max_sec: 3-5)**
-- ✅ Good for: Most standard videos, presentations
-- ✅ Pros: Balanced readability and subtitle frequency
-- ⭐ **Recommended default**
+**中等行（max_ch: 25-35，max_sec: 3-5）**
+- ✅ 适用于：大多数标准视频、演示文稿
+- ✅ 优点：可读性和字幕频率平衡
+- ⭐ **推荐默认值**
 
-**Long Lines (max_ch: 40-60, max_sec: 5-8)**
-- ✅ Good for: Documentaries, lectures, slow-paced content
-- ✅ Pros: Fewer subtitle switches, more context visible
-- ❌ Cons: Can be hard to read, especially on small screens
+**长行（max_ch: 40-60，max_sec: 5-8）**
+- ✅ 适用于：纪录片、讲座、慢节奏内容
+- ✅ 优点：字幕切换较少，可见上下文更多
+- ❌ 缺点：可能难以阅读，尤其是在小屏幕上
 
-### Punctuation Configuration
+### 标点符号配置
 
-**For English:**
+**英语：**
 ```
-Recommended: ,.!?;…
-```
-
-**For Chinese:**
-```
-Recommended: ，。！？；、
-Include English punctuation if content is mixed: ，。！？；、,.!?
+推荐：,.!?;…
 ```
 
-**For Japanese:**
+**中文：**
 ```
-Recommended: 。！？、
+推荐：，。！？；、
+如果内容是混合的，包含英文标点：，。！？；、,.!?
 ```
 
-### Device Selection
+**日语：**
+```
+推荐：。！？、
+```
 
-- **auto**: Automatically selects CUDA if available, otherwise CPU (recommended)
-- **cuda**: Force GPU processing (faster, requires NVIDIA GPU with CUDA)
-- **cpu**: Force CPU processing (slower, works on all systems)
+### 设备选择
 
-**Performance Comparison:**
-- CUDA (GPU): ~10-30x faster than CPU
-- CPU: Slower but works everywhere, good for testing
+- **auto**：自动选择 CUDA（如果可用），否则选择 CPU（推荐）
+- **cuda**：强制 GPU 处理（更快，需要带 CUDA 的 NVIDIA GPU）
+- **cpu**：强制 CPU 处理（较慢，但在所有系统上都能工作）
 
-## 🔧 Troubleshooting
+**性能比较：**
+- CUDA（GPU）：比 CPU 快约 10-30 倍
+- CPU：较慢但在所有地方都能工作，适合测试
 
-### Issue: "WhisperX is not installed"
+## 🔧 故障排除
 
-**Solution:**
+### 问题："WhisperX is not installed"
+
+**解决方案：**
 ```bash
 pip install git+https://github.com/m-bain/whisperx.git
 ```
 
-If this fails, try installing PyTorch first:
+如果失败，请先尝试安装 PyTorch：
 ```bash
 pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip install git+https://github.com/m-bain/whisperx.git
 ```
 
-### Issue: "Failed to align any words"
+### 问题："Failed to align any words"
 
-**Possible causes and solutions:**
+**可能的原因和解决方案：**
 
-1. **Audio too short**: Use audio clips longer than 2-3 seconds
-2. **Audio quality issues**: Ensure clear speech without excessive background noise
-3. **Language mismatch**: Make sure selected language matches the audio
-4. **Text-audio mismatch**: Verify that the text content matches what is spoken
-5. **Incorrect audio format**: Try converting audio to WAV format (16kHz, mono)
+1. **音频太短**：使用长度超过 2-3 秒的音频片段
+2. **音频质量问题**：确保清晰的语音，没有过多的背景噪音
+3. **语言不匹配**：确保选择的语言与音频匹配
+4. **文本-音频不匹配**：验证文本内容与口述内容匹配
+5. **音频格式不正确**：尝试将音频转换为 WAV 格式（16kHz，单声道）
 
-### Issue: "Out of memory" error
+### 问题："Out of memory" 错误
 
-**Solutions:**
-1. Switch to CPU: Set `device` to "cpu"
-2. Process shorter audio segments
-3. Close other applications to free up memory
-4. Upgrade GPU memory (for CUDA users)
+**解决方案：**
+1. 切换到 CPU：将 `device` 设置为 "cpu"
+2. 处理更短的音频段
+3. 关闭其他应用程序以释放内存
+4. 升级 GPU 内存（对于 CUDA 用户）
 
-### Issue: Model not loading from local directory
+### 问题：模型无法从本地目录加载
 
-**Check:**
-1. Model files are in correct directory: `ComfyUI/models/whisperx/[model_folder_name]/`
-2. All required files are present: `config.json`, `pytorch_model.bin`, `preprocessor_config.json`, `tokenizer_config.json`, `vocab.json`
-3. Model folder name matches the language code mapping (e.g., "wav2vec2-large-xlsr-53-english" for English)
+**检查：**
+1. 模型文件在正确的目录中：`ComfyUI/models/whisperx/[模型文件夹名称]/`
+2. 所有必需的文件都存在：`config.json`、`pytorch_model.bin`、`preprocessor_config.json`、`tokenizer_config.json`、`vocab.json`
+3. 模型文件夹名称与语言代码映射匹配（例如，英语为 "wav2vec2-large-xlsr-53-english"）
 
-### Issue: SRT timestamps are inaccurate
+### 问题：SRT 时间戳不准确
 
-**Solutions:**
-1. Ensure text exactly matches spoken content
-2. Try adjusting `max_sec` and `max_ch` parameters
-3. Check audio quality and clarity
-4. Verify language selection is correct
+**解决方案：**
+1. 确保文本与口述内容完全匹配
+2. 尝试调整 `max_sec` 和 `max_ch` 参数
+3. 检查音频质量和清晰度
+4. 验证语言选择是否正确
 
-## 📝 Requirements
+## 📝 系统要求
 
-- **Python**: 3.8 or higher
-- **PyTorch**: 2.0 or higher
-- **ComfyUI**: Latest version recommended
-- **CUDA**: Optional, for GPU acceleration (CUDA 11.7 or higher)
+- **Python**：3.8 或更高版本
+- **PyTorch**：2.0 或更高版本
+- **ComfyUI**：推荐最新版本
+- **CUDA**：可选，用于 GPU 加速（CUDA 11.7 或更高版本）
 
-### Disk Space Requirements
+### 磁盘空间要求
 
-- Base installation: ~500 MB
-- Each language model: ~1.2 GB
-- Typical installation with 2-3 languages: ~3-4 GB
+- 基础安装：约 500 MB
+- 每个语言模型：约 1.2 GB
+- 典型安装（2-3 种语言）：3-4 GB
 
-## 🙏 Credits
+## 🙏 致谢
 
-- [WhisperX](https://github.com/m-bain/whisperx) by Max Bain - Advanced audio-text alignment
-- [OpenAI Whisper](https://github.com/openai/whisper) - Foundation speech recognition model
-- [Wav2Vec2](https://huggingface.co/transformers/model_doc/wav2vec2.html) - Alignment models by Facebook AI
-- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) - Powerful node-based UI for Stable Diffusion
+- [WhisperX](https://github.com/m-bain/whisperx) by Max Bain - 高级音频文本对齐
+- [OpenAI Whisper](https://github.com/openai/whisper) - 基础语音识别模型
+- [Wav2Vec2](https://huggingface.co/transformers/model_doc/wav2vec2.html) - Facebook AI 的对齐模型
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) - 强大的 Stable Diffusion 节点化 UI
 
-## 📄 License
+## 📄 许可证
 
-MIT License - see [LICENSE](LICENSE) file for details
+MIT License - 详见 [LICENSE](LICENSE) 文件
 
-## 🤝 Support
+## 🤝 支持
 
-- **Issues**: [GitHub Issues](https://github.com/loockluo/comfyui-whisperx-pro/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/loockluo/comfyui-whisperx-pro/discussions)
-- **Pull Requests**: Contributions are welcome!
+- **问题反馈**：[GitHub Issues](https://github.com/loockluo/comfyui-whisperx-pro/issues)
+- **讨论交流**：[GitHub Discussions](https://github.com/loockluo/comfyui-whisperx-pro/discussions)
+- **贡献代码**：欢迎提交 Pull Request！
 
-## 🗺️ Roadmap
+## 🗺️ 开发路线图
 
-- [ ] Add batch processing support
-- [ ] Support for additional subtitle formats (VTT, ASS)
-- [ ] Real-time preview of subtitle timing
-- [ ] Custom model fine-tuning support
-- [ ] Automatic punctuation restoration
+- [ ] 添加批处理支持
+- [ ] 支持其他字幕格式（VTT、ASS）
+- [ ] 字幕时间的实时预览
+- [ ] 自定义模型微调支持
+- [ ] 自动标点恢复
 
 ---
 
-If you find this project helpful, please consider giving it a ⭐ on GitHub!
+如果您觉得这个项目有帮助，请在 GitHub 上给我们一个 ⭐！
