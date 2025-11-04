@@ -2,23 +2,33 @@
 
 English | [简体中文](README_CN.md)
 
-A professional ComfyUI custom node for accurate text-audio alignment using [WhisperX](https://github.com/m-bain/whisperX).
+A professional ComfyUI custom node for accurate audio-text alignment and SRT subtitle generation using [WhisperX](https://github.com/m-bain/whisperx).
 
-## Features
+## ✨ Features
 
-- **WhisperX Alignment Node**: Accurate word-level and sentence-level timestamp alignment
-- **Multi-language UI**: Node interface automatically switches between English and Chinese based on ComfyUI's language settings
-- **Multiple Output Levels**: Segment-level, sentence-level (configurable ~30 chars), and word-level timestamps
-- **Local Model Loading**: Load models from ComfyUI/models directory - no automatic downloads
-- Plain text and JSON input support
-- Automatic text segmentation with customizable sentence splitting
-- Support for multiple languages (en, fr, de, es, it, pt, nl, ja, zh)
-- GPU acceleration support
-- Character-level and word-level alignment options
+- 🎯 **Precise Alignment**: Word-level timestamp alignment using WhisperX
+- 🎬 **SRT Subtitle Generation**: Automatically generate SRT subtitle files with customizable formatting
+- 🌍 **Multi-language Support**: Support for 9 languages (English, Chinese, French, German, Spanish, Italian, Portuguese, Dutch, Japanese)
+- 🌐 **Bilingual UI**: Node interface automatically switches between English and Chinese based on system locale
+- 📦 **Local Model Loading**: Load alignment models from ComfyUI/models directory - no automatic downloads
+- ⚡ **GPU Acceleration**: CUDA support for faster processing
+- 🎛️ **Flexible Configuration**: Customizable line duration, character limits, and punctuation triggers
+- 🔧 **Easy Integration**: Seamlessly integrates with ComfyUI's audio loading nodes
 
-## Installation
+## 📋 Table of Contents
 
-### 1. Install to ComfyUI Custom Nodes
+- [Installation](#-installation)
+- [Model Setup](#-model-setup)
+- [Node Overview](#-node-overview)
+- [Usage Examples](#-usage-examples)
+- [Supported Languages](#-supported-languages)
+- [Configuration Tips](#-configuration-tips)
+- [Troubleshooting](#-troubleshooting)
+- [Credits](#-credits)
+
+## 🚀 Installation
+
+### Step 1: Install the Custom Node
 
 ```bash
 cd ComfyUI/custom_nodes
@@ -27,29 +37,59 @@ cd comfyui-whisperx-pro
 pip install -r requirements.txt
 ```
 
-### 2. Download Alignment Models
+### Step 2: Install WhisperX (if needed)
+
+If the automatic installation fails, install WhisperX manually:
+
+```bash
+pip install git+https://github.com/m-bain/whisperx.git
+```
+
+For CUDA GPU support, ensure PyTorch is installed with CUDA:
+
+```bash
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+### Step 3: Restart ComfyUI
+
+After installation, restart ComfyUI to load the new node.
+
+## 📦 Model Setup
+
+### Model Directory Structure
 
 Models must be placed in: `ComfyUI/models/whisperx/[model_folder_name]/`
 
-**Download from HuggingFace:**
-- English: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-english
-- Chinese: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn
-- French: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-french
-- German: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-german
-- Spanish: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-spanish
-- Italian: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-italian
-- Portuguese: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-portuguese
-- Japanese: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-japanese
-- Dutch: https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-dutch
+The node will automatically load the appropriate alignment model based on the selected language.
 
-**Download from ModelScope (魔塔社区) - Faster for China users:**
-- English: https://modelscope.cn/models/jonatasgrosman/wav2vec2-large-xlsr-53-english
-- Chinese: https://modelscope.cn/models/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn
-- (Other languages available similarly)
+### Download Pre-trained Alignment Models
 
-**Example for Chinese model:**
+#### Option 1: HuggingFace (Worldwide)
+
+Download the complete model folder (all files including `config.json`, `pytorch_model.bin`, `preprocessor_config.json`, `tokenizer_config.json`, `vocab.json`):
+
+- **English**: [wav2vec2-large-xlsr-53-english](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-english)
+- **Chinese**: [wav2vec2-large-xlsr-53-chinese-zh-cn](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn)
+- **French**: [wav2vec2-large-xlsr-53-french](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-french)
+- **German**: [wav2vec2-large-xlsr-53-german](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-german)
+- **Spanish**: [wav2vec2-large-xlsr-53-spanish](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-spanish)
+- **Italian**: [wav2vec2-large-xlsr-53-italian](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-italian)
+- **Portuguese**: [wav2vec2-large-xlsr-53-portuguese](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-portuguese)
+- **Japanese**: [wav2vec2-large-xlsr-53-japanese](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-japanese)
+- **Dutch**: [wav2vec2-large-xlsr-53-dutch](https://huggingface.co/jonatasgrosman/wav2vec2-large-xlsr-53-dutch)
+
+#### Option 2: ModelScope (Faster for China)
+
+- **English**: [wav2vec2-large-xlsr-53-english](https://modelscope.cn/models/jonatasgrosman/wav2vec2-large-xlsr-53-english)
+- **Chinese**: [wav2vec2-large-xlsr-53-chinese-zh-cn](https://modelscope.cn/models/jonatasgrosman/wav2vec2-large-xlsr-53-chinese-zh-cn)
+- Other languages available similarly
+
+### Example: Installing Chinese Model
+
 ```bash
 cd ComfyUI/models/whisperx
+
 # Download all files from the model page and place them in:
 # wav2vec2-large-xlsr-53-chinese-zh-cn/
 #   ├── config.json
@@ -59,99 +99,64 @@ cd ComfyUI/models/whisperx
 #   └── vocab.json
 ```
 
-The node will automatically load the correct model based on the selected language.
+## 📦 Node Overview
 
-### 3. Manual Installation (if needed)
+### WhisperX SRT Generator
 
-If the automatic installation fails, install WhisperX manually:
+This node aligns text with audio and generates SRT subtitle format output with precise word-level timestamps.
 
-```bash
-pip install git+https://github.com/m-bain/whisperx.git
+#### Input Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `audio` | AUDIO | Required | - | Audio data from ComfyUI's official audio loader |
+| `text` | STRING | Required | - | Text content to align with audio |
+| `language` | DROPDOWN | `zh` | en/fr/de/es/it/pt/nl/ja/zh | Language code for alignment model |
+| `max_sec` | FLOAT | 4.5 | 1.0 - 10.0 | Maximum duration per subtitle line (seconds) |
+| `max_ch` | INT | 28 | 10 - 100 | Maximum characters per subtitle line |
+| `punct` | STRING | `，。！？；、,.!?;…` | - | Punctuation marks that trigger line breaks |
+| `device` | DROPDOWN | `auto` | auto/cuda/cpu | Device to use for processing |
+
+#### Output Results
+
+| Output | Type | Description |
+|--------|------|-------------|
+| `SRT Content` | STRING | Generated SRT subtitle content with timestamps |
+| `Alignment Info` | STRING | JSON metadata about the alignment process |
+
+#### Example Outputs
+
+**SRT Content:**
+```srt
+1
+00:00:00,520 --> 00:00:02,350
+Hello everyone.
+
+2
+00:00:02,350 --> 00:00:04,180
+Today we're going to talk
+
+3
+00:00:04,180 --> 00:00:06,890
+about WhisperX.
 ```
 
-## Nodes
-
-**Important:** This node requires audio data from ComfyUI's official audio loading nodes (e.g., "Load Audio" from ComfyUI-Advanced-Audio or similar). Connect the AUDIO output from those nodes to the WhisperX Alignment node.
-
-### WhisperX Alignment
-
-Aligns text transcripts with audio to get accurate word-level timestamps. Supports both plain text and JSON input with automatic text segmentation.
-
-**Inputs:**
-- `audio` (AUDIO): Audio data from ComfyUI's official audio loader
-- `input_type` (DROPDOWN): Input format - "plain_text" or "json"
-- `text_input` (STRING): Your text content (plain text or JSON segments)
-- `language` (DROPDOWN): Language code for alignment model
-- `auto_segment` (BOOLEAN): Automatically segment text into smaller chunks (default: True)
-- `max_chars_per_segment` (INT): Maximum characters per segment when auto_segment is enabled (default: 200, range: 50-1000)
-- `max_chars_per_sentence` (INT): Maximum characters per sentence for sentence-level output (default: 30, range: 10-200)
-- `return_char_alignments` (BOOLEAN): Return character-level alignments (default: False)
-- `model_name` (STRING, optional): Specific model folder name to use (default: "auto" - auto-select by language)
-- `device` (DROPDOWN): Device to use (auto, cuda, cpu)
-
-**Outputs:**
-- `aligned_segments` (STRING): Segments with accurate timestamps (larger chunks based on max_chars_per_segment)
-- `word_segments` (STRING): Individual words with timestamps
-- `sentence_segments` (STRING): Sentence-level segments with timestamps (approx. max_chars_per_sentence chars each)
-- `alignment_info` (STRING): Alignment statistics and metadata
-
-**Example Plain Text Input:**
-```
-Hello world. How are you today? I'm doing great!
-```
-
-**Example JSON Input:**
+**Alignment Info:**
 ```json
-[
-  {
-    "text": "Hello world",
-    "start": 0.0,
-    "end": 2.0
-  }
-]
+{
+  "language": "en",
+  "device": "cuda",
+  "audio_duration_seconds": 10.5,
+  "text_length": 87,
+  "aligned_words": 15,
+  "subtitle_lines": 8,
+  "max_duration_per_line": 4.5,
+  "max_characters_per_line": 28,
+  "punctuation_triggers": ",.!?;…"
+}
 ```
 
-**Example Word Segments Output:**
-```json
-[
-  {
-    "word": "Hello",
-    "start": 0.52,
-    "end": 0.89,
-    "score": 0.95
-  },
-  {
-    "word": "world",
-    "start": 1.05,
-    "end": 1.67,
-    "score": 0.97
-  }
-]
-```
-
-**Example Sentence Segments Output:**
-```json
-[
-  {
-    "text": "Hello world. How are you today?",
-    "start": 0.52,
-    "end": 3.45,
-    "words": [
-      {"word": "Hello", "start": 0.52, "end": 0.89, "score": 0.95},
-      {"word": "world", "start": 1.05, "end": 1.67, "score": 0.97},
-      ...
-    ]
-  },
-  {
-    "text": "I'm doing great!",
-    "start": 3.45,
-    "end": 5.20,
-    "words": [...]
-  }
-]
-```
-
-## Workflow Examples
+## 🎯 Usage Examples
 
 ### Prerequisites
 
@@ -159,137 +164,216 @@ You need a ComfyUI audio loading node first. Install one of these:
 - **ComfyUI-Advanced-Audio**: Provides "Load Audio" node
 - Or any other ComfyUI audio loader that outputs AUDIO type
 
-### Plain Text Alignment
+### Basic Workflow
 
-Perfect for when you already have a transcript and just need timing:
+1. **Add Audio Loading Node**
+   - Add "Load Audio" node (from ComfyUI-Advanced-Audio or similar)
+   - Set the path to your audio file
 
-1. Add ComfyUI's "Load Audio" node and set audio file path
-2. Add "WhisperX Alignment" node
-3. Connect `audio` output from Load Audio to Alignment node
-4. Set `input_type` to "plain_text"
-5. Paste your transcript in `text_input`
-6. Enable `auto_segment` for automatic sentence splitting
-7. Adjust `max_chars_per_segment` if needed (recommended: 100-300)
-8. Set language
-9. Run to get precise word-level timestamps
+2. **Add WhisperX SRT Generator Node**
+   - Add "WhisperX SRT Generator" node to your workflow
+   - Connect the `audio` output from the audio loader to the node
 
-**Example:**
+3. **Configure Parameters**
+   - Set `language` to match your audio (e.g., "en" for English, "zh" for Chinese)
+   - Paste your transcript in the `text` field
+   - Adjust timing parameters:
+     - `max_sec`: Control how long each subtitle line can be
+     - `max_ch`: Control how many characters per line
+     - `punct`: Specify which punctuation marks trigger line breaks
+
+4. **Run and Export**
+   - Execute the workflow
+   - The node will output SRT-formatted subtitles
+   - Save the output to a `.srt` file using a text output node
+
+### Example 1: English Video Subtitles
+
+**Scenario**: You have an English video and want to generate subtitles
+
 ```
-Input text: "Hello everyone. Today we're going to talk about WhisperX. It's an amazing tool for speech recognition and alignment."
-Output: Automatically split into 3 segments with accurate word timings
-```
+Settings:
+- Language: en
+- Max Duration: 4.5 seconds
+- Max Characters: 28
+- Punctuation: ,.!?;…
 
-### Using with External Transcripts (JSON)
+Input Text:
+"Hello everyone. Today we're going to talk about WhisperX. It's an amazing tool for speech recognition and alignment. Let me show you how it works."
 
-1. Add ComfyUI's "Load Audio" node and set audio file path
-2. Add "WhisperX Alignment" node
-3. Connect `audio` from Load Audio to Alignment
-4. Set `input_type` to "json"
-5. Provide your own transcript in JSON format in `text_input`
-6. Set language
-7. Run to get precise timing alignment
-
-### Chinese/Japanese Text Alignment
-
-The auto-segmentation supports CJK languages:
-
-1. Add ComfyUI's "Load Audio" node with your audio file
-2. Add "WhisperX Alignment" node and connect audio
-3. Set `language` to "zh" or "ja"
-4. Use `plain_text` input type
-5. Enable `auto_segment`
-6. The segmenter will use appropriate punctuation (。！？etc.)
-
-**Example Chinese:**
-```
-今天天气很好。我们去公园散步吧。你觉得怎么样？
-→ Automatically segmented by Chinese sentence endings
+Output:
+Automatically generates 4-6 subtitle lines with precise word-level timing
 ```
 
-## Supported Languages
+### Example 2: Chinese Audio Subtitles
 
-- English (en)
-- French (fr)
-- German (de)
-- Spanish (es)
-- Italian (it)
-- Portuguese (pt)
-- Dutch (nl)
-- Japanese (ja)
-- Chinese (zh)
-- Auto-detection (auto)
+**Scenario**: You have a Chinese podcast and want to generate subtitles
 
-## Advanced Usage
+```
+Settings:
+- Language: zh
+- Max Duration: 4.5 seconds
+- Max Characters: 28
+- Punctuation: ，。！？；、
 
-### Manual Model Selection
+Input Text:
+"大家好。今天我们来讨论一下WhisperX这个工具。它是一个非常强大的语音识别和对齐工具。让我来给大家演示一下它的使用方法。"
 
-By default, the alignment model is automatically selected based on the language you choose. However, you can manually specify a model if needed:
+Output:
+Automatically generates subtitle lines respecting Chinese punctuation rules
+```
 
-1. Leave `model_name` as "auto" for automatic selection (recommended)
-2. Or specify a model name like "WAV2VEC2_ASR_BASE_960H" to force-load a specific model
+### Example 3: Multi-language Content
 
-**When to use manual model selection:**
-- Testing different alignment models
-- Using custom fine-tuned models
-- Debugging alignment issues
+For content mixing multiple languages, use the dominant language for the `language` parameter, or process each language segment separately.
 
-**Example:**
-- Language: "en"
-- Model Name: "auto" → Automatically loads the best English alignment model
-- Model Name: "WAV2VEC2_ASR_BASE_960H" → Forces this specific model
+## 🌍 Supported Languages
 
-## Performance Tips
+| Language | Code | Model Required |
+|----------|------|----------------|
+| English | `en` | wav2vec2-large-xlsr-53-english |
+| Chinese | `zh` | wav2vec2-large-xlsr-53-chinese-zh-cn |
+| French | `fr` | wav2vec2-large-xlsr-53-french |
+| German | `de` | wav2vec2-large-xlsr-53-german |
+| Spanish | `es` | wav2vec2-large-xlsr-53-spanish |
+| Italian | `it` | wav2vec2-large-xlsr-53-italian |
+| Portuguese | `pt` | wav2vec2-large-xlsr-53-portuguese |
+| Dutch | `nl` | wav2vec2-large-xlsr-53-dutch |
+| Japanese | `ja` | wav2vec2-large-xlsr-53-japanese |
 
-1. **GPU Acceleration**: Use CUDA for faster processing
-2. **Model Selection**:
-   - Leave `model_name` as "auto" for best results
-   - Manual model selection is for advanced users only
-3. **Text Segmentation**:
-   - Adjust `max_chars_per_segment` (100-300 recommended)
-   - Shorter segments = more accurate alignment but slower processing
+## ⚙️ Configuration Tips
 
-## Requirements
+### Optimizing Subtitle Line Length
 
-- Python 3.8+
-- PyTorch 2.0+
-- CUDA (optional, for GPU acceleration)
-- ComfyUI
+**Short Lines (max_ch: 15-20, max_sec: 2-3)**
+- ✅ Good for: Social media videos, mobile viewing
+- ✅ Pros: Easy to read, good for fast-paced content
+- ❌ Cons: Many subtitle switches, can be distracting
 
-## Troubleshooting
+**Medium Lines (max_ch: 25-35, max_sec: 3-5)**
+- ✅ Good for: Most standard videos, presentations
+- ✅ Pros: Balanced readability and subtitle frequency
+- ⭐ **Recommended default**
 
-### WhisperX Installation Issues
+**Long Lines (max_ch: 40-60, max_sec: 5-8)**
+- ✅ Good for: Documentaries, lectures, slow-paced content
+- ✅ Pros: Fewer subtitle switches, more context visible
+- ❌ Cons: Can be hard to read, especially on small screens
 
-If you encounter installation issues:
+### Punctuation Configuration
 
+**For English:**
+```
+Recommended: ,.!?;…
+```
+
+**For Chinese:**
+```
+Recommended: ，。！？；、
+Include English punctuation if content is mixed: ，。！？；、,.!?
+```
+
+**For Japanese:**
+```
+Recommended: 。！？、
+```
+
+### Device Selection
+
+- **auto**: Automatically selects CUDA if available, otherwise CPU (recommended)
+- **cuda**: Force GPU processing (faster, requires NVIDIA GPU with CUDA)
+- **cpu**: Force CPU processing (slower, works on all systems)
+
+**Performance Comparison:**
+- CUDA (GPU): ~10-30x faster than CPU
+- CPU: Slower but works everywhere, good for testing
+
+## 🔧 Troubleshooting
+
+### Issue: "WhisperX is not installed"
+
+**Solution:**
 ```bash
-# Install PyTorch first
-pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
-
-# Then install WhisperX
 pip install git+https://github.com/m-bain/whisperx.git
 ```
 
-### Out of Memory Errors
+If this fails, try installing PyTorch first:
+```bash
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install git+https://github.com/m-bain/whisperx.git
+```
 
-- Reduce batch_size
-- Use a smaller model
-- Switch to CPU (slower but uses less memory)
+### Issue: "Failed to align any words"
 
-### Audio File Not Found
+**Possible causes and solutions:**
 
-- Use absolute paths for audio files
-- Ensure the file exists and is accessible
-- Check file permissions
+1. **Audio too short**: Use audio clips longer than 2-3 seconds
+2. **Audio quality issues**: Ensure clear speech without excessive background noise
+3. **Language mismatch**: Make sure selected language matches the audio
+4. **Text-audio mismatch**: Verify that the text content matches what is spoken
+5. **Incorrect audio format**: Try converting audio to WAV format (16kHz, mono)
 
-## Credits
+### Issue: "Out of memory" error
 
-- [WhisperX](https://github.com/m-bain/whisperx) by Max Bain
-- Based on [OpenAI Whisper](https://github.com/openai/whisper)
+**Solutions:**
+1. Switch to CPU: Set `device` to "cpu"
+2. Process shorter audio segments
+3. Close other applications to free up memory
+4. Upgrade GPU memory (for CUDA users)
 
-## License
+### Issue: Model not loading from local directory
 
-MIT License
+**Check:**
+1. Model files are in correct directory: `ComfyUI/models/whisperx/[model_folder_name]/`
+2. All required files are present: `config.json`, `pytorch_model.bin`, `preprocessor_config.json`, `tokenizer_config.json`, `vocab.json`
+3. Model folder name matches the language code mapping (e.g., "wav2vec2-large-xlsr-53-english" for English)
 
-## Support
+### Issue: SRT timestamps are inaccurate
 
-For issues and feature requests, please visit the [GitHub repository](https://github.com/loockluo/comfyui-whisperx-pro/issues).
+**Solutions:**
+1. Ensure text exactly matches spoken content
+2. Try adjusting `max_sec` and `max_ch` parameters
+3. Check audio quality and clarity
+4. Verify language selection is correct
+
+## 📝 Requirements
+
+- **Python**: 3.8 or higher
+- **PyTorch**: 2.0 or higher
+- **ComfyUI**: Latest version recommended
+- **CUDA**: Optional, for GPU acceleration (CUDA 11.7 or higher)
+
+### Disk Space Requirements
+
+- Base installation: ~500 MB
+- Each language model: ~1.2 GB
+- Typical installation with 2-3 languages: ~3-4 GB
+
+## 🙏 Credits
+
+- [WhisperX](https://github.com/m-bain/whisperx) by Max Bain - Advanced audio-text alignment
+- [OpenAI Whisper](https://github.com/openai/whisper) - Foundation speech recognition model
+- [Wav2Vec2](https://huggingface.co/transformers/model_doc/wav2vec2.html) - Alignment models by Facebook AI
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI) - Powerful node-based UI for Stable Diffusion
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details
+
+## 🤝 Support
+
+- **Issues**: [GitHub Issues](https://github.com/loockluo/comfyui-whisperx-pro/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/loockluo/comfyui-whisperx-pro/discussions)
+- **Pull Requests**: Contributions are welcome!
+
+## 🗺️ Roadmap
+
+- [ ] Add batch processing support
+- [ ] Support for additional subtitle formats (VTT, ASS)
+- [ ] Real-time preview of subtitle timing
+- [ ] Custom model fine-tuning support
+- [ ] Automatic punctuation restoration
+
+---
+
+If you find this project helpful, please consider giving it a ⭐ on GitHub!
