@@ -11,6 +11,12 @@ import torchaudio
 import numpy as np
 from typing import Dict, List, Tuple, Any, Union, Optional
 
+# Configure Hugging Face mirror for better download speed
+from .hf_config import auto_configure_mirror, get_mirror_status
+
+# Auto-configure HF mirror on import
+auto_configure_mirror()
+
 # Import ComfyUI's folder_paths for model directory access
 try:
     import folder_paths
