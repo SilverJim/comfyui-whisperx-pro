@@ -1,5 +1,5 @@
 # WhisperX and dependencies
-git+https://github.com/m-bain/whisperx.git
+git+https://github.com/SilverJim/whisperX.git
 
 # Core dependencies (usually installed with WhisperX)
 torch>=2.0.0
