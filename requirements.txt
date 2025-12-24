@@ -12,4 +12,4 @@ librosa>=0.10.0
 soundfile>=0.12.0
 
 # Alignment models
-ctc-segmentation>=1.7.0
+# ctc-segmentation>=1.7.0
