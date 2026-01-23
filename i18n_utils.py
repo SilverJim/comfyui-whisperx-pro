@@ -157,6 +157,10 @@ def get_localized_input_types() -> Dict[str, Any]:
                 "placeholder": TEXTS['punct_placeholder'].get(),
                 "tooltip": TEXTS['punct_tooltip'].get()
             }),
+            "unload_model": ("BOOLEAN", {
+                "default": False,
+                "tooltip": "Unload models from VRAM after processing"
+            }),
         },
         "optional": {
             "device": (["auto", "cuda", "cpu"], {

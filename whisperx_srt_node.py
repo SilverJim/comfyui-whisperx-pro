@@ -202,12 +202,12 @@ class WhisperXSRTNode:
     A ComfyUI node that aligns text with audio and generates SRT subtitles.
     Based on the align_to_srt.py script functionality.
     """
+    align_model = None
+    metadata = None
+    current_language = None
 
     def __init__(self):
-        self.align_model = None
-        self.metadata = None
-        self.current_language = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        print("[INFO] WhisperX SRT initialized.")
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -226,7 +226,8 @@ class WhisperXSRTNode:
         max_sec: float,
         max_ch: int,
         punct: str,
-        device: str = "auto"
+        device: str = "auto",
+        unload_model: bool = False
     ) -> Tuple[str, str]:
         """
         Align text with audio and generate SRT subtitles.
@@ -276,13 +277,14 @@ class WhisperXSRTNode:
         print(f"[INFO] Text length: {len(txt)} characters")
 
         # Load alignment model if needed
-        if self.align_model is None or self.current_language != language:
+        if WhisperXSRTNode.align_model is None or WhisperXSRTNode.current_language != language:
             print("[INFO] Loading alignment model...")
-            self.align_model, self.metadata = load_align_model(
+            WhisperXSRTNode.align_model, WhisperXSRTNode.metadata = load_align_model(
                 language_code=language, 
                 device=device
             )
-            self.current_language = language
+            WhisperXSRTNode.current_language = language
+            torch.cuda.empty_cache()
             print("[INFO] Alignment model loaded successfully")
 
         # Create segments for alignment
@@ -293,8 +295,8 @@ class WhisperXSRTNode:
         print("[INFO] Starting forced alignment...")
         result = whisperx.align(
             segments,
-            self.align_model,
-            self.metadata,
+            WhisperXSRTNode.align_model,
+            WhisperXSRTNode.metadata,
             audio_array,
             device,
             return_char_alignments=False,
@@ -387,6 +389,12 @@ class WhisperXSRTNode:
         }
 
         print("[INFO] SRT generation completed successfully")
+        if unload_model:
+            print("[INFO] Unloading models from VRAM")
+            WhisperXSRTNode.align_model = None
+            WhisperXSRTNode.metadata = None
+            WhisperXSRTNode.current_language = None
+            torch.cuda.empty_cache()
 
         return (
             srt_content,
